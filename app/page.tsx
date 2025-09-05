@@ -1,103 +1,158 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/stores/auth";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Heart, Calendar, Users, Camera, MapPin } from "lucide-react";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import HeroSection from "@/components/HeroSection";
+import DesignGallery from "@/components/DesignGallery";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+	const router = useRouter();
+	const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+	const isLoading = useAuthStore((state) => state.isLoading);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+	useEffect(() => {
+		if (!isLoading && isAuthenticated) {
+			router.push("/dashboard");
+		}
+	}, [isAuthenticated, isLoading, router]);
+
+	if (isLoading) {
+		return (
+			<div className="min-h-screen flex items-center justify-center">
+				<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+			</div>
+		);
+	}
+
+	return (
+		<div className="min-h-screen bg-background">
+			<Header />
+
+			{/* Hero Section */}
+			<HeroSection />
+
+			{/* Design Gallery Preview Section */}
+			<section className="py-16 bg-background">
+				<div className="container mx-auto px-4 text-center">
+					<h2 className="text-3xl font-display font-bold mb-4">Popular Wedding Designs</h2>
+					<p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+						Browse our most loved wedding website designs. Each template is fully customizable to match your
+						unique style.
+					</p>
+					<div className="mb-8">
+						<DesignGallery />
+					</div>
+					<Link href="/designs">
+						<Button size="lg" variant="outline" className="text-lg px-8 py-6">
+							View All Designs
+						</Button>
+					</Link>
+				</div>
+			</section>
+
+			{/* Features Section */}
+			<div className="container mx-auto px-4 py-16">
+				<h2 className="text-3xl font-bold text-center mb-12">Everything You Need to Plan Your Perfect Day</h2>
+
+				<div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+					<Card className="text-center hover:shadow-lg transition-shadow">
+						<CardHeader>
+							<div className="flex justify-center mb-4">
+								<Calendar className="w-12 h-12 text-primary" />
+							</div>
+							<CardTitle>Wedding Dashboard</CardTitle>
+							<CardDescription>
+								Track your progress with a comprehensive dashboard showing your planning status
+							</CardDescription>
+						</CardHeader>
+					</Card>
+
+					<Card className="text-center hover:shadow-lg transition-shadow">
+						<CardHeader>
+							<div className="flex justify-center mb-4">
+								<Users className="w-12 h-12 text-primary" />
+							</div>
+							<CardTitle>Guest Management</CardTitle>
+							<CardDescription>
+								Manage your guest list, track RSVPs, and handle plus-ones effortlessly
+							</CardDescription>
+						</CardHeader>
+					</Card>
+
+					<Card className="text-center hover:shadow-lg transition-shadow">
+						<CardHeader>
+							<div className="flex justify-center mb-4">
+								<MapPin className="w-12 h-12 text-primary" />
+							</div>
+							<CardTitle>Vendor Directory</CardTitle>
+							<CardDescription>
+								Find and coordinate with wedding vendors, track bookings and payments
+							</CardDescription>
+						</CardHeader>
+					</Card>
+
+					<Card className="text-center hover:shadow-lg transition-shadow">
+						<CardHeader>
+							<div className="flex justify-center mb-4">
+								<Heart className="w-12 h-12 text-primary" />
+							</div>
+							<CardTitle>Wedding Websites</CardTitle>
+							<CardDescription>
+								Create beautiful, personalized wedding websites for your guests
+							</CardDescription>
+						</CardHeader>
+					</Card>
+
+					<Card className="text-center hover:shadow-lg transition-shadow">
+						<CardHeader>
+							<div className="flex justify-center mb-4">
+								<Camera className="w-12 h-12 text-primary" />
+							</div>
+							<CardTitle>Photo Gallery</CardTitle>
+							<CardDescription>
+								Share engagement photos and wedding memories with your loved ones
+							</CardDescription>
+						</CardHeader>
+					</Card>
+
+					<Card className="text-center hover:shadow-lg transition-shadow">
+						<CardHeader>
+							<div className="flex justify-center mb-4">
+								<Calendar className="w-12 h-12 text-primary" />
+							</div>
+							<CardTitle>Timeline Planning</CardTitle>
+							<CardDescription>
+								Stay organized with wedding timeline and task management tools
+							</CardDescription>
+						</CardHeader>
+					</Card>
+				</div>
+			</div>
+
+			{/* CTA Section */}
+			<div className="bg-primary/5 py-16">
+				<div className="container mx-auto px-4 text-center">
+					<h2 className="text-3xl font-bold mb-6">Ready to Start Planning?</h2>
+					<p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+						Join thousands of couples who have planned their perfect wedding with Green Eves. Start your journey
+						today.
+					</p>
+					<Link href="/register">
+						<Button size="lg" className="text-lg px-8 py-6">
+							Get Started Free
+						</Button>
+					</Link>
+				</div>
+			</div>
+
+			<Footer />
+		</div>
+	);
 }
