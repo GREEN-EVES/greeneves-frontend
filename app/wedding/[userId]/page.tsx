@@ -133,25 +133,29 @@ export default function WeddingWebsite() {
 				setWeddingInfo(mockWeddingInfo);
 			}
 
-			// Fetch photos (mock data for now)
-			const mockPhotos: Photo[] = [
-				{
-					id: "1",
-					url: "https://images.unsplash.com/photo-1606800052052-a08af7148866?w=800&h=600&fit=crop",
-					title: "Engagement",
-				},
-				{
-					id: "2",
-					url: "https://images.unsplash.com/photo-1594736797933-d0401ba2fe65?w=800&h=600&fit=crop",
-					title: "Pre-wedding",
-				},
-				{
-					id: "3",
-					url: "https://images.unsplash.com/photo-1571115764595-644a1f56a55c?w=800&h=600&fit=crop",
-					title: "Together",
-				},
-			];
-			setPhotos(mockPhotos);
+			// Fetch real photos from the API
+			try {
+				const photosResponse = await fetch(
+					`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/uploads/public/photos/${userId}`
+				);
+				if (photosResponse.ok) {
+					const photosData = await photosResponse.json();
+					console.log('Fetched photos data:', photosData);
+					// Convert relative URLs to full URLs
+					const photosWithFullUrls = (photosData.photos || []).map((photo: any) => ({
+						...photo,
+						url: `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${photo.url}`
+					}));
+					console.log('Photos with full URLs:', photosWithFullUrls);
+					setPhotos(photosWithFullUrls);
+				} else {
+					// If no photos found, set empty array
+					setPhotos([]);
+				}
+			} catch (error) {
+				console.error("Error fetching photos:", error);
+				setPhotos([]);
+			}
 		} catch (error) {
 			console.error("Error fetching wedding data:", error);
 		} finally {
@@ -231,8 +235,10 @@ export default function WeddingWebsite() {
 		);
 	}
 
+	console.log('Current photos state:', photos);
+	
 	return (
-		<div className="min-h-screen bg-background">
+		<div className="min-h-screen bg-background" style={{ backgroundColor: '#f7f5f3', minHeight: '100vh' }}>
 			{/* Photo Carousel Hero */}
 			<section className="relative h-screen overflow-hidden">
 				{/* Background Images */}
@@ -276,9 +282,9 @@ export default function WeddingWebsite() {
 				</nav>
 
 				{/* Main Content */}
-				<div className="relative z-10 h-full flex items-center justify-center text-center text-white px-4">
-					<div className="space-y-8 max-w-4xl">
-						<h1 className="text-6xl md:text-8xl font-light tracking-wide">{weddingInfo.coupleNames}</h1>
+				<div className="relative z-10 h-full flex items-center justify-center text-center text-white px-4" style={{ position: 'relative', zIndex: 10, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', color: 'white', padding: '0 1rem' }}>
+					<div className="space-y-8 max-w-4xl" style={{ maxWidth: '56rem' }}>
+						<h1 className="text-6xl md:text-8xl font-light tracking-wide" style={{ fontSize: '3.75rem', fontWeight: '300', letterSpacing: '0.025em', marginBottom: '2rem' }}>{weddingInfo.coupleNames}</h1>
 
 						{weddingInfo.tagline && (
 							<p className="text-xl md:text-2xl font-light leading-relaxed opacity-90 italic">
@@ -382,6 +388,20 @@ export default function WeddingWebsite() {
 							</CardContent>
 						</Card>
 					</div>
+				</div>
+			</section>
+
+			{/* Debug Info - Remove this after debugging */}
+			<section className="py-10 px-4 bg-yellow-100">
+				<div className="max-w-4xl mx-auto text-center">
+					<h3 className="text-lg font-bold mb-4">Debug Info</h3>
+					<p>Photos count: {photos.length}</p>
+					{photos.length > 0 && (
+						<div className="mt-4 text-left">
+							<p>First photo URL: {photos[0]?.url}</p>
+							<p>First photo ID: {photos[0]?.id}</p>
+						</div>
+					)}
 				</div>
 			</section>
 

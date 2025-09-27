@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth";
 import { useWeddingStore } from "@/stores/wedding";
+import { useDesignStore } from "@/stores/design";
 import Header from "@/components/Header";
 import { Calendar, Heart, Users, Settings, FileText, Camera, Gift, MapPin, Globe, Copy } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +17,8 @@ export default function DashboardPage() {
 	const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 	const isLoading = useAuthStore((state) => state.isLoading);
 
-	const { progress, fetchProgress, fetchWeddingInfo } = useWeddingStore();
+	const { progress, fetchProgress, fetchWeddingInfo, weddingInfo } = useWeddingStore();
+	const { fetchSelectedDesigns } = useDesignStore();
 
 	// console.log(weddingInfo);
 	useEffect(() => {
@@ -28,6 +30,7 @@ export default function DashboardPage() {
 		if (isAuthenticated) {
 			fetchWeddingInfo().catch(() => {});
 			fetchProgress().catch(() => {});
+			fetchSelectedDesigns().catch(() => {});
 		}
 	}, [isAuthenticated, isLoading, router, fetchWeddingInfo, fetchProgress]);
 
@@ -60,9 +63,9 @@ export default function DashboardPage() {
 			color: "text-pink-600",
 		},
 		{
-			label: "Vendors",
-			value: progress ? `${progress.vendors.booked}/${progress.vendors.total}` : "0/12",
-			icon: MapPin,
+			label: "Tasks Done",
+			value: progress ? `${progress.timeline.completed}/${progress.timeline.total}` : "0/0",
+			icon: Calendar,
 			color: "text-green-600",
 		},
 		{
@@ -204,87 +207,123 @@ export default function DashboardPage() {
 					</Card>
 				</div>
 
-				{/* Wedding Website Share */}
+				{/* Wedding Website Section */}
 				<Card className="mt-6">
 					<CardHeader>
 						<CardTitle className="flex items-center gap-2">
 							<Globe className="h-5 w-5 text-primary" />
 							Wedding Website
 						</CardTitle>
-						<CardDescription>Share your personalized wedding website with guests</CardDescription>
+						<CardDescription>
+							{weddingInfo 
+								? "Your personalized wedding website is ready to share" 
+								: "Create your beautiful wedding website"}
+						</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border">
-							<div className="flex-1">
-								<p className="font-medium text-sm">Your Wedding Website:</p>
-								<p className="text-xs text-muted-foreground font-mono mt-1">
-									{typeof window !== "undefined"
-										? `${window.location.origin}/wedding/${user?.id}`
-										: `https://greeneves.com/wedding/${user?.id}`}
+						{weddingInfo ? (
+							<>
+								<div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border mb-4">
+									<div className="flex-1">
+										<p className="font-medium text-sm">Your Wedding Website:</p>
+										<p className="text-xs text-muted-foreground font-mono mt-1">
+											{typeof window !== "undefined"
+												? `${window.location.origin}/wedding/${user?.id}`
+												: `https://greeneves.com/wedding/${user?.id}`}
+										</p>
+									</div>
+									<div className="flex gap-2">
+										<Button
+											size="sm"
+											variant="outline"
+											onClick={() => {
+												if (typeof window !== "undefined" && user?.id) {
+													navigator.clipboard.writeText(
+														`${window.location.origin}/wedding/${user.id}`
+													);
+												}
+											}}>
+											<Copy className="h-4 w-4 mr-2" />
+											Copy Link
+										</Button>
+										<Button
+											size="sm"
+											onClick={() => user?.id && window.open(`/wedding/${user.id}`, "_blank")}>
+											View Site
+										</Button>
+									</div>
+								</div>
+								<div className="flex gap-3">
+									<Button 
+										onClick={() => router.push('/designs')}
+										variant="outline"
+										className="flex-1"
+									>
+										<Settings className="h-4 w-4 mr-2" />
+										Change Design
+									</Button>
+									<Button 
+										onClick={() => router.push(`/website-builder?edit=true`)}
+										className="flex-1"
+									>
+										<FileText className="h-4 w-4 mr-2" />
+										Edit Content
+									</Button>
+								</div>
+							</>
+						) : (
+							<div className="text-center py-8">
+								<Globe className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+								<h3 className="text-lg font-semibold mb-2">Create Your Wedding Website</h3>
+								<p className="text-muted-foreground mb-6">
+									Choose a beautiful template and create your personalized wedding website in minutes
 								</p>
+								<div className="flex gap-3 justify-center">
+									<Button 
+										onClick={() => router.push('/designs')}
+										size="lg"
+									>
+										<Heart className="h-4 w-4 mr-2" />
+										Browse Templates
+									</Button>
+								</div>
 							</div>
-							<div className="flex gap-2">
-								<Button
-									size="sm"
-									variant="outline"
-									onClick={() => {
-										if (typeof window !== "undefined" && user?.id) {
-											navigator.clipboard.writeText(
-												`${window.location.origin}/wedding/${user.id}`
-											);
-										}
-									}}>
-									<Copy className="h-4 w-4 mr-2" />
-									Copy Link
-								</Button>
-								<Button
-									size="sm"
-									onClick={() => user?.id && window.open(`/wedding/${user.id}`, "_blank")}>
-									View Site
-								</Button>
-							</div>
-						</div>
+						)}
 					</CardContent>
 				</Card>
 
-				{/* Planning Tools */}
+				{/* Wedding Planning Tools */}
 				<Card className="mt-6">
 					<CardHeader>
 						<CardTitle>Wedding Planning Tools</CardTitle>
 						<CardDescription>Access all your planning tools in one place</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 							{[
 								{
 									title: "Guest Management",
 									desc: "Manage your guest list and RSVPs",
 									icon: Users,
-									href: "/dashboard/guests",
-								},
-								{
-									title: "Vendor Directory",
-									desc: "Find and book wedding vendors",
-									icon: MapPin,
-									href: "/dashboard/vendors",
+									href: "/guests",
 								},
 								{
 									title: "Budget Tracker",
 									desc: "Keep track of wedding expenses",
 									icon: Gift,
-									href: "/dashboard/budget",
+									href: "/budget",
 								},
 								{
 									title: "Timeline Planner",
 									desc: "Plan your wedding day schedule",
 									icon: Calendar,
-									href: "/dashboard/timeline",
+									href: "/timeline",
 								},
 								{
 									title: "Photo Gallery",
 									desc: "Share and organize wedding photos",
 									icon: Camera,
-									href: "/dashboard/photos",
+									href: "/photos",
 								},
 								{
 									title: "Design Gallery",
@@ -293,13 +332,18 @@ export default function DashboardPage() {
 									href: "/designs",
 								},
 							].map((tool, index) => (
-								<Card key={index} className="hover:shadow-lg transition-shadow cursor-pointer">
-									<CardContent className="p-6 text-center">
-										<tool.icon className="h-8 w-8 text-primary mx-auto mb-4" />
-										<h3 className="font-semibold mb-2">{tool.title}</h3>
-										<p className="text-sm text-muted-foreground mb-4">{tool.desc}</p>
-										<Button variant="outline" size="sm" asChild>
-											<a href={tool.href}>Open Tool</a>
+								<Card key={index} className="hover:shadow-md transition-all duration-200 cursor-pointer border hover:border-gray-300">
+									<CardContent className="p-8 text-center">
+										<tool.icon className="h-12 w-12 text-gray-600 mx-auto mb-6" />
+										<h3 className="text-xl font-bold text-gray-900 mb-3">{tool.title}</h3>
+										<p className="text-gray-600 text-sm mb-6 leading-relaxed">{tool.desc}</p>
+										<Button 
+											variant="outline" 
+											size="sm" 
+											onClick={() => router.push(tool.href)}
+											className="border-gray-300 text-gray-700 hover:bg-gray-50"
+										>
+											Open Tool
 										</Button>
 									</CardContent>
 								</Card>

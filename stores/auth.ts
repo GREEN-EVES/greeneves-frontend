@@ -104,6 +104,7 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       initialize: () => {
+        set({ isLoading: true });
         const token = localStorage.getItem('access_token');
         if (token) {
           // Validate token by fetching profile
@@ -126,7 +127,12 @@ export const useAuthStore = create<AuthStore>()(
               });
             });
         } else {
-          set({ isLoading: false });
+          set({ 
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            isLoading: false 
+          });
         }
       },
     }),

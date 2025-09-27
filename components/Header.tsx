@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, Globe, User, Menu } from 'lucide-react';
+import { ChevronDown, User, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -14,6 +14,8 @@ import {
 import { useAuthStore } from '@/stores/auth';
 
 const Header = () => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
     <header className="bg-primary text-primary-foreground">
       {/* Top notification bar */}
@@ -31,7 +33,7 @@ const Header = () => {
           <div className="flex items-center space-x-8">
             <div className="flex items-center space-x-4">
               <Link href="/">
-                <h1 className="text-2xl font-bold">Green Eves</h1>
+                <h1 className="text-2xl font-bold">GreenEves</h1>
               </Link>
               <span className="bg-primary-foreground text-primary px-2 py-1 rounded text-xs font-medium">
                 New
@@ -83,26 +85,71 @@ const Header = () => {
           <div className="flex items-center space-x-4">
             <span className="hidden lg:inline text-sm">Find an Event</span>
             
-            <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center space-x-1 hover:text-accent transition-colors">
-                <Globe className="h-4 w-4" />
-                <span className="hidden sm:inline">English (UK)</span>
-                <ChevronDown className="h-4 w-4" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-white text-foreground">
-                <DropdownMenuItem>English (UK)</DropdownMenuItem>
-                <DropdownMenuItem>English (US)</DropdownMenuItem>
-                <DropdownMenuItem>Français</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="hidden md:block">
+              <AuthButtons />
+            </div>
 
-            <AuthButtons />
-
-            <Button variant="ghost" size="icon" className="md:hidden">
-              <Menu className="h-5 w-5" />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="md:hidden"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden bg-primary/95 backdrop-blur-sm border-t border-primary-foreground/20">
+            <div className="container mx-auto px-4 py-4 space-y-4">
+              {/* Mobile Navigation Links */}
+              <div className="space-y-3">
+                <div className="border-b border-primary-foreground/20 pb-3">
+                  <h3 className="font-semibold text-primary-foreground/80 text-sm uppercase tracking-wide mb-2">Plan & Invite</h3>
+                  <div className="space-y-2">
+                    <Link href="/designs" className="block py-2 text-primary-foreground hover:text-accent transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+                      Wedding Website
+                    </Link>
+                    <div className="block py-2 text-primary-foreground hover:text-accent transition-colors">Save the Dates</div>
+                    <div className="block py-2 text-primary-foreground hover:text-accent transition-colors">Invitations</div>
+                    <div className="block py-2 text-primary-foreground hover:text-accent transition-colors">Guest List</div>
+                  </div>
+                </div>
+
+                <div className="border-b border-primary-foreground/20 pb-3">
+                  <h3 className="font-semibold text-primary-foreground/80 text-sm uppercase tracking-wide mb-2">Gift List</h3>
+                  <div className="space-y-2">
+                    <div className="block py-2 text-primary-foreground hover:text-accent transition-colors">Create Registry</div>
+                    <div className="block py-2 text-primary-foreground hover:text-accent transition-colors">Browse Gifts</div>
+                  </div>
+                </div>
+
+                <div className="border-b border-primary-foreground/20 pb-3">
+                  <h3 className="font-semibold text-primary-foreground/80 text-sm uppercase tracking-wide mb-2">Expert Advice</h3>
+                  <div className="space-y-2">
+                    <div className="block py-2 text-primary-foreground hover:text-accent transition-colors">Wedding Planning</div>
+                    <div className="block py-2 text-primary-foreground hover:text-accent transition-colors">Etiquette Guide</div>
+                    <div className="block py-2 text-primary-foreground hover:text-accent transition-colors">Inspiration</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mobile Auth Buttons */}
+              <div className="pt-4 border-t border-primary-foreground/20">
+                <div onClick={() => setIsMobileMenuOpen(false)}>
+                  <AuthButtons />
+                </div>
+              </div>
+
+              {/* Find Event Link */}
+              <div className="pt-2">
+                <div className="text-primary-foreground/80 text-sm">Find an Event</div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );

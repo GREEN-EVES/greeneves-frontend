@@ -1,108 +1,14 @@
 'use client';
 
-import React from 'react';
-import { Heart, Eye } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Heart, Eye, Crown, Check } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-
-// Mock wedding design data
-const weddingDesigns = [
-  {
-    id: 1,
-    name: 'Charlotte',
-    category: 'Classic',
-    image: 'https://images.unsplash.com/photo-1606800052052-a08af7148866?w=400&h=300&fit=crop',
-    colors: ['Cream', 'Gold'],
-    collection: 'Premium'
-  },
-  {
-    id: 2,
-    name: 'Lavender Leaves',
-    category: 'Floral & Botanical',
-    image: 'https://images.unsplash.com/photo-1594736797933-d0401ba2fe65?w=400&h=300&fit=crop',
-    colors: ['Purple', 'Green'],
-    collection: 'Green Eves Original'
-  },
-  {
-    id: 3,
-    name: 'Deco Sunburst Silver',
-    category: 'Metallic',
-    image: 'https://images.unsplash.com/photo-1571115764595-644a1f56a55c?w=400&h=300&fit=crop',
-    colors: ['Silver', 'White'],
-    collection: 'Premium'
-  },
-  {
-    id: 4,
-    name: 'Strung In Love',
-    category: 'Rustic',
-    image: 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=400&h=300&fit=crop',
-    colors: ['Beige', 'Brown'],
-    collection: 'Green Eves Original'
-  },
-  {
-    id: 5,
-    name: 'Sea Salt',
-    category: 'Destination',
-    image: 'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=400&h=300&fit=crop',
-    colors: ['Blue', 'White'],
-    collection: 'Green Eves Original'
-  },
-  {
-    id: 6,
-    name: 'Coastal',
-    category: 'Destination',
-    image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=400&h=300&fit=crop',
-    colors: ['Blue', 'Cream'],
-    collection: 'Premium'
-  },
-  {
-    id: 7,
-    name: 'Gold Foil Frame',
-    category: 'Metallic',
-    image: 'https://images.unsplash.com/photo-1591604466107-ec97de577aff?w=400&h=300&fit=crop',
-    colors: ['Gold', 'White'],
-    collection: 'Premium'
-  },
-  {
-    id: 8,
-    name: 'Elegant Flowers',
-    category: 'Floral & Botanical',
-    image: 'https://images.unsplash.com/photo-1520854221256-17451cc331bf?w=400&h=300&fit=crop',
-    colors: ['Pink', 'Green'],
-    collection: 'Green Eves Original'
-  },
-  {
-    id: 9,
-    name: 'Cherie',
-    category: 'Modern',
-    image: 'https://images.unsplash.com/photo-1545558014-8692077e9b5c?w=400&h=300&fit=crop',
-    colors: ['Pink', 'White'],
-    collection: 'Green Eves Original'
-  },
-  {
-    id: 10,
-    name: 'Modern Simplicity',
-    category: 'Modern',
-    image: 'https://images.unsplash.com/photo-1464207687429-7505649dae38?w=400&h=300&fit=crop',
-    colors: ['Black', 'White'],
-    collection: 'Premium'
-  },
-  {
-    id: 11,
-    name: 'Editorial Lime',
-    category: 'Bold',
-    image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop',
-    colors: ['Green', 'White'],
-    collection: 'Classic'
-  },
-  {
-    id: 12,
-    name: 'Lavender Blush',
-    category: 'Floral & Botanical',
-    image: 'https://images.unsplash.com/photo-1606800052049-3b861f63e1c8?w=400&h=300&fit=crop',
-    colors: ['Purple', 'Pink'],
-    collection: 'Green Eves Original'
-  }
-];
+import { useDesignStore } from '@/stores/design';
+import { useAuthStore } from '@/stores/auth';
+import DesignPreviewModal from './DesignPreviewModal';
+import type { DesignTemplate } from '@/types';
+import api from '@/lib/api';
 
 const getColorHex = (color: string): string => {
   const colorMap: { [key: string]: string } = {
@@ -122,69 +28,211 @@ const getColorHex = (color: string): string => {
   return colorMap[color.toLowerCase()] || '#6B7280';
 };
 
-const DesignGallery = () => {
+const DesignGallery: React.FC = () => {
+  const router = useRouter();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { templates, isLoading, fetchTemplates, toggleFavorite } = useDesignStore();
+  const [previewTemplate, setPreviewTemplate] = useState<DesignTemplate | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [userSubscription, setUserSubscription] = useState<any>(null);
+
+  useEffect(() => {
+    fetchTemplates();
+  }, [fetchTemplates]);
+
+  const fetchUserSubscription = useCallback(async () => {
+    if (!isAuthenticated) return;
+    
+    try {
+      const response = await api.get('/payments/subscription');
+      setUserSubscription(response.data);
+    } catch (error) {
+      console.error('Failed to fetch user subscription:', error);
+      setUserSubscription(null);
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchUserSubscription();
+    }
+  }, [isAuthenticated, fetchUserSubscription]);
+
+  const hasActivePremium = () => {
+    return userSubscription && 
+      userSubscription.status === 'active' && 
+      (userSubscription.plan === 'premium' || userSubscription.plan === 'enterprise') &&
+      (!userSubscription.expiresAt || new Date(userSubscription.expiresAt) > new Date());
+  };
+
+  const handlePreview = (template: DesignTemplate) => {
+    setPreviewTemplate(template);
+    setIsPreviewOpen(true);
+  };
+
+  const handleToggleFavorite = async (template: DesignTemplate, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+    await toggleFavorite(template.id);
+  };
+
+  const handleUseDesign = async (template: DesignTemplate) => {
+    if (!isAuthenticated) {
+      // Store template ID in localStorage for after registration
+      localStorage.setItem('selectedTemplateId', template.id);
+      router.push(`/register?template=${template.id}&redirect=website-builder`);
+      return;
+    }
+    
+    // User is authenticated, go directly to website builder
+    router.push(`/website-builder?template=${template.id}`);
+  };
+
+  if (isLoading) {
+    return (
+      <section className="py-16 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[...Array(12)].map((_, index) => (
+              <div key={index} className="bg-card rounded-xl shadow-sm border border-border animate-pulse">
+                <div className="bg-gray-200 h-48 rounded-t-xl" />
+                <div className="p-4 space-y-3">
+                  <div className="bg-gray-200 h-4 rounded w-3/4" />
+                  <div className="bg-gray-200 h-3 rounded w-1/2" />
+                  <div className="bg-gray-200 h-8 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className="py-16 bg-background">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {weddingDesigns.map((design) => (
-            <div key={design.id} className="group bg-card rounded-xl shadow-sm border border-border hover:shadow-lg transition-shadow duration-300">
-              {/* Image */}
-              <div className="relative overflow-hidden rounded-t-xl">
-                <img 
-                  src={design.image} 
-                  alt={design.name}
-                  className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                
-                {/* Overlay actions */}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center space-x-3">
-                  <Button size="sm" variant="secondary" className="bg-white/90 text-foreground hover:bg-white">
-                    <Eye className="h-4 w-4 mr-2" />
-                    Preview
-                  </Button>
-                  <Button size="sm" variant="ghost" className="text-white hover:bg-white/20">
-                    <Heart className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-4 space-y-3">
-                <div className="space-y-1">
-                  <h3 className="font-medium text-lg text-foreground">{design.name}</h3>
-                  <p className="text-sm text-muted-foreground">{design.category}</p>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex space-x-1">
-                    {design.colors.slice(0, 2).map((color, index) => (
-                      <div 
-                        key={index}
-                        className="w-4 h-4 rounded-full border-2 border-white shadow-sm"
-                        style={{ backgroundColor: getColorHex(color) }}
-                      />
-                    ))}
+    <>
+      <section className="py-16 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {templates.map((template) => (
+              <div key={template.id} className="group bg-card rounded-xl shadow-sm border border-border hover:shadow-lg transition-shadow duration-300">
+                {/* Image */}
+                <div className="relative overflow-hidden rounded-t-xl">
+                  <img 
+                    src={template.imageUrl} 
+                    alt={template.name}
+                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  
+                  {template.isPremium && (
+                    <div className={`absolute top-2 right-2 p-1 rounded-full ${
+                      hasActivePremium() 
+                        ? 'bg-green-500 text-white' 
+                        : 'bg-yellow-500 text-white'
+                    }`}>
+                      {hasActivePremium() ? (
+                        <Check className="h-3 w-3" />
+                      ) : (
+                        <Crown className="h-3 w-3" />
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Overlay actions */}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center space-x-3">
+                    <Button 
+                      size="sm" 
+                      variant="secondary" 
+                      className="bg-white/90 text-foreground hover:bg-white"
+                      onClick={() => handlePreview(template)}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      Preview
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="text-white hover:bg-white/20"
+                      onClick={(e) => handleToggleFavorite(template, e)}
+                    >
+                      <Heart className={`h-4 w-4 ${template.isFavorited ? 'fill-current text-red-500' : ''}`} />
+                    </Button>
                   </div>
-                  <span className="text-xs text-muted-foreground">{design.collection}</span>
                 </div>
 
-                <Button variant="outline" className="w-full">
-                  Use This Design
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
+                {/* Content */}
+                <div className="p-4 space-y-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-medium text-lg text-foreground">{template.name}</h3>
+                      {template.isPremium && template.price && (
+                        <div className="flex items-center space-x-2">
+                          {hasActivePremium() && (
+                            <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                              Purchased
+                            </span>
+                          )}
+                          <span className={`text-sm font-semibold ${
+                            hasActivePremium() ? 'line-through text-gray-400' : 'text-primary'
+                          }`}>₦{template.price}</span>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">{template.category}</p>
+                  </div>
 
-        {/* Load more button */}
-        <div className="text-center mt-12">
-          <Button variant="outline" size="lg" className="px-12">
-            Load More Designs
-          </Button>
+                  <div className="flex items-center justify-between">
+                    <div className="flex space-x-1">
+                      {template.colors.slice(0, 2).map((color, index) => (
+                        <div 
+                          key={index}
+                          className="w-4 h-4 rounded-full border-2 border-white shadow-sm"
+                          style={{ backgroundColor: getColorHex(color) }}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs text-muted-foreground">{template.collection}</span>
+                  </div>
+
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => handleUseDesign(template)}
+                  >
+                    {template.isPremium && hasActivePremium() 
+                      ? "Use Premium Design" 
+                      : "Use This Design"
+                    }
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Load more button - could implement pagination later */}
+          {templates.length > 0 && (
+            <div className="text-center mt-12">
+              <Button variant="outline" size="lg" className="px-12" disabled>
+                Showing all designs
+              </Button>
+            </div>
+          )}
         </div>
-      </div>
-    </section>
+      </section>
+
+      {/* Preview Modal */}
+      <DesignPreviewModal
+        template={previewTemplate}
+        isOpen={isPreviewOpen}
+        onClose={() => {
+          setIsPreviewOpen(false);
+          setPreviewTemplate(null);
+        }}
+      />
+    </>
   );
 };
 

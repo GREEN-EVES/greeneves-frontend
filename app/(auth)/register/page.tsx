@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,6 +22,10 @@ type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
 	const router = useRouter();
+	const searchParams = useSearchParams();
+	const templateId = searchParams?.get('template');
+	const redirectTo = searchParams?.get('redirect');
+	
 	const register_action = useAuthStore((state) => state.register);
 	const isLoading = useAuthStore((state) => state.isLoading);
 	const showToast = useUIStore((state) => state.showToast);
@@ -37,8 +41,14 @@ export default function RegisterPage() {
 	const onSubmit = async (data: RegisterForm) => {
 		try {
 			await register_action(data.email, data.password, data.displayName);
-			showToast("Account created successfully! Welcome to Green Eves.", "success");
-			router.push("/dashboard");
+			showToast("Account created successfully! Welcome to GreenEves.", "success");
+			
+			// Handle redirect based on where user came from
+			if (redirectTo === 'website-builder' && templateId) {
+				router.push(`/website-builder?template=${templateId}`);
+			} else {
+				router.push("/dashboard");
+			}
 		} catch (error) {
 			if (error instanceof Error) {
 				showToast(error.message || "Registration failed. Please try again.", "error");
@@ -56,7 +66,9 @@ export default function RegisterPage() {
 						</div>
 					</div>
 					<CardTitle className="text-2xl font-bold">Create Your Account</CardTitle>
-					<CardDescription>Start planning your dream wedding today</CardDescription>
+					<CardDescription>
+						{templateId ? 'Create your account to build your wedding website' : 'Start planning your dream wedding today'}
+					</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

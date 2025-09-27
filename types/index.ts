@@ -105,3 +105,69 @@ export interface PublicWeddingData {
     minutes: number;
   };
 }
+
+export interface DesignTemplate {
+  id: string;
+  name: string;
+  category: string;
+  collection: string;
+  imageUrl: string;
+  previewUrl?: string;
+  colors: string[];
+  description?: string;
+  isPremium: boolean;
+  price?: number;
+  features?: string[];
+  isFavorited?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WeddingDesign {
+  id: string;
+  userId: string;
+  templateId: string;
+  name: string;
+  category?: string;
+  customStyles?: any;
+  createdAt: string;
+  updatedAt: string;
+  template?: DesignTemplate;
+}
+
+export interface GetDesignTemplatesParams {
+  category?: string;
+  collection?: string;
+  color?: string;
+  premiumOnly?: boolean;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+export interface PaymentInitialization {
+  paymentId: string;
+  reference: string;
+  authorizationUrl: string;
+  accessCode: string;
+}
+
+export interface PaymentVerification {
+  paymentId: string;
+  subscriptionId: string;
+  status: string;
+  amount: number;
+  paidAt: string;
+}
+
+export interface Subscription {
+  id: string;
+  userId: string;
+  templateId?: string;
+  plan: 'free' | 'premium' | 'enterprise';
+  status: 'active' | 'cancelled' | 'expired' | 'pending';
+  amount?: number;
+  currency?: string;
+  startedAt: string;
+  expiresAt?: string;
+  template?: DesignTemplate;
+}

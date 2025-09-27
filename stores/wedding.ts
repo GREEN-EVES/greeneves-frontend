@@ -129,8 +129,8 @@ export const useWeddingStore = create<WeddingStore>((set, get) => ({
 
   fetchProgress: async () => {
     try {
-      const response = await api.get('/analytics/wedding-progress');
-      set({ progress: response.data.stats });
+      const response = await api.get('/weddings/progress');
+      set({ progress: response.data.progress });
     } catch (error) {
       throw error;
     }
