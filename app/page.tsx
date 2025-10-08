@@ -11,6 +11,15 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
 import DesignGallery from "@/components/DesignGallery";
+import Hero from "@/components/Hero";
+import Features from "@/components/Features";
+import AboutPage from "@/components/AboutPage";
+import JoinOurTeam from "@/components/JoinUs";
+import HeroBanner from "@/components/HeroBanner";
+import CareersHero from "@/components/CareerHero";
+import FAQ from "@/components/FAQ";
+import CTA from "@/components/CTA";
+import HorizontalAssets from "@/components/HorizontalAssets";
 
 export default function Home() {
 	const router = useRouter();
@@ -36,7 +45,22 @@ export default function Home() {
 			<Header />
 
 			{/* Hero Section */}
-			<HeroSection />
+			<Hero />
+			<div className="pt-[80px]">
+				{" "}
+				{/* Account for fixed header height */}
+				{/* <HeroSection /> */}
+			</div>
+			<Features />
+
+			<HorizontalAssets />
+			<JoinOurTeam />
+
+			<AboutPage />
+			<HeroBanner />
+			<CareersHero />
+			<FAQ />
+			<CTA />
 
 			{/* Design Gallery Preview Section */}
 			<section className="py-16 bg-background">
