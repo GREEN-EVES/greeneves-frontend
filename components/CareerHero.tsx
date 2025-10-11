@@ -29,7 +29,7 @@ export default function CareersHero() {
       >
         {/* Curve 1 */}
         <motion.path
-          d="M-100,500 C200,200 800,1000 1600,200"
+          d="M-170,500 C200,200 800,1000 1600,200"
           stroke="white"
           strokeWidth="3"
           fill="none"
