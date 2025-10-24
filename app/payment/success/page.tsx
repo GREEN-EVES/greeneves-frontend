@@ -6,15 +6,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Check, Loader2, AlertCircle } from 'lucide-react';
 import { useUIStore } from '@/stores/ui';
+import { useTemplateStore } from '@/stores/template';
+import { designApi } from '@/lib/design-api';
 
 function PaymentSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const reference = searchParams?.get('reference');
+  const templateId = searchParams?.get('template');
   const showToast = useUIStore((state) => state.showToast);
-  
+  const { fetchUserSubscriptions } = useTemplateStore();
+
   const [verificationStatus, setVerificationStatus] = useState<'loading' | 'success' | 'failed'>('loading');
-  const [websiteUrl, setWebsiteUrl] = useState('');
 
   useEffect(() => {
     if (reference) {
@@ -26,31 +29,39 @@ function PaymentSuccessContent() {
 
   const verifyPayment = async (paymentReference: string) => {
     try {
-      const response = await fetch('/api/payments/verify', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-        },
-        body: JSON.stringify({ reference: paymentReference }),
-      });
+      console.log('🔄 Verifying payment with reference:', paymentReference);
 
-      if (response.ok) {
-        const data = await response.json();
+      const result = await designApi.verifyPayment(paymentReference);
+
+      console.log('✅ Payment verification result:', result);
+
+      if (result.status === 'success') {
         setVerificationStatus('success');
-        
-        // Generate website URL
-        const userId = localStorage.getItem('userId'); // You'd need to store this
-        const url = `${window.location.origin}/wedding/${userId}`;
-        setWebsiteUrl(url);
-        
-        showToast('Payment successful! Your website is now live.', 'success');
+
+        // Refresh user subscriptions
+        console.log('📦 Refreshing user subscriptions...');
+        await fetchUserSubscriptions();
+
+        showToast('Payment successful! Your template subscription is now active.', 'success');
+
+        // Redirect to website builder after 3 seconds
+        setTimeout(() => {
+          if (templateId) {
+            router.push(`/website-builder?template=${templateId}`);
+          } else {
+            router.push('/templates');
+          }
+        }, 3000);
       } else {
         throw new Error('Payment verification failed');
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('❌ Payment verification error:', error);
       setVerificationStatus('failed');
-      showToast('Payment verification failed. Please contact support.', 'error');
+      showToast(
+        error.response?.data?.message || 'Payment verification failed. Please contact support.',
+        'error'
+      );
     }
   };
 
@@ -82,7 +93,7 @@ function PaymentSuccessContent() {
               <Button variant="outline" onClick={() => router.push('/dashboard')} className="flex-1">
                 Go to Dashboard
               </Button>
-              <Button onClick={() => router.push('/designs')} className="flex-1">
+              <Button onClick={() => router.push('/templates')} className="flex-1">
                 Try Again
               </Button>
             </div>
@@ -93,7 +104,7 @@ function PaymentSuccessContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-purple-50">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
@@ -103,35 +114,36 @@ function PaymentSuccessContent() {
             Payment Successful!
           </CardTitle>
           <CardDescription>
-            Your wedding website is now live and ready to share
+            Your template subscription is now active
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {websiteUrl && (
-            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-              <p className="font-medium text-green-800 mb-2">Your Website:</p>
-              <div className="flex items-center gap-2">
-                <code className="bg-white px-3 py-2 rounded border text-sm flex-1 text-gray-800">
-                  {websiteUrl}
-                </code>
-                <Button 
-                  size="sm" 
-                  onClick={() => {
-                    navigator.clipboard.writeText(websiteUrl);
-                    showToast('URL copied!', 'success');
-                  }}
-                >
-                  Copy
-                </Button>
-              </div>
-            </div>
-          )}
+          <div className="bg-green-50 p-4 rounded-lg border border-green-200 text-center">
+            <p className="font-medium text-green-800 mb-2">
+              ✨ Subscription Activated
+            </p>
+            <p className="text-sm text-green-700">
+              You can now use this template to create your event website
+            </p>
+          </div>
+
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 text-center">
+            <p className="text-sm text-blue-800">
+              Redirecting you to website builder in 3 seconds...
+            </p>
+          </div>
 
           <div className="grid grid-cols-1 gap-3">
-            <Button asChild>
-              <a href={websiteUrl} target="_blank" rel="noopener noreferrer">
-                View Your Website
-              </a>
+            <Button
+              onClick={() => {
+                if (templateId) {
+                  router.push(`/website-builder?template=${templateId}`);
+                } else {
+                  router.push('/templates');
+                }
+              }}
+            >
+              Start Building Now
             </Button>
             <Button variant="outline" onClick={() => router.push('/dashboard')}>
               Go to Dashboard

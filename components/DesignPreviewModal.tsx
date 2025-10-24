@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useAuthStore } from '@/stores/auth';
-import { useDesignStore } from '@/stores/design';
+import { useTemplateStore } from '@/stores/template';
 import type { DesignTemplate } from '@/types';
 import { useRouter } from 'next/navigation';
 
@@ -46,7 +46,7 @@ const DesignPreviewModal: React.FC<DesignPreviewModalProps> = ({
 }) => {
   const router = useRouter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const { toggleFavorite, selectTemplate, isLoading, error } = useDesignStore();
+  const { toggleFavorite } = useTemplateStore();
   const [isSelecting, setIsSelecting] = useState(false);
 
   if (!template) return null;
@@ -61,20 +61,15 @@ const DesignPreviewModal: React.FC<DesignPreviewModalProps> = ({
 
   const handleSelectTemplate = async () => {
     if (!isAuthenticated) {
-      router.push('/login');
+      // Store template ID in localStorage for after registration
+      localStorage.setItem('selectedTemplateId', template.id);
+      router.push(`/register?template=${template.id}&redirect=website-builder`);
       return;
     }
 
-    setIsSelecting(true);
-    try {
-      await selectTemplate(template.id);
-      onClose();
-      // Could show success message or redirect to customization
-    } catch (err) {
-      // Error is handled in the store
-    } finally {
-      setIsSelecting(false);
-    }
+    // User is authenticated, go directly to website builder
+    router.push(`/website-builder?template=${template.id}`);
+    onClose();
   };
 
   return (
@@ -102,13 +97,11 @@ const DesignPreviewModal: React.FC<DesignPreviewModalProps> = ({
           </DialogTitle>
           <DialogDescription>
             <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-              <span>{template.category}</span>
-              <span>•</span>
-              <span>{template.collection}</span>
+              <span>{template.category?.name || 'General'}</span>
               {template.isPremium && template.price && (
                 <>
                   <span>•</span>
-                  <span className="font-semibold text-primary">${template.price}</span>
+                  <span className="font-semibold text-primary">₦{template.price}</span>
                 </>
               )}
             </div>
@@ -120,23 +113,33 @@ const DesignPreviewModal: React.FC<DesignPreviewModalProps> = ({
           <div className="space-y-4">
             <div className="aspect-[4/3] bg-gray-100 rounded-lg overflow-hidden">
               <img
-                src={template.previewUrl || template.imageUrl}
+                src={template.previewImage}
                 alt={`${template.name} preview`}
                 className="w-full h-full object-cover"
               />
             </div>
             
-            {/* Color Palette */}
+            {/* Color Schemes */}
             <div className="space-y-2">
-              <h4 className="font-medium text-sm">Color Palette</h4>
-              <div className="flex space-x-2">
-                {template.colors.map((color, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <div
-                      className="w-6 h-6 rounded-full border-2 border-gray-200"
-                      style={{ backgroundColor: getColorHex(color) }}
-                    />
-                    <span className="text-xs text-muted-foreground capitalize">{color}</span>
+              <h4 className="font-medium text-sm">Available Color Schemes</h4>
+              <div className="space-y-2">
+                {template.colorSchemes && template.colorSchemes.map((scheme, index) => (
+                  <div key={index} className="flex items-center space-x-3">
+                    <div className="flex space-x-1">
+                      <div
+                        className="w-6 h-6 rounded-full border-2 border-gray-200"
+                        style={{ backgroundColor: scheme.primary }}
+                      />
+                      <div
+                        className="w-6 h-6 rounded-full border-2 border-gray-200"
+                        style={{ backgroundColor: scheme.secondary }}
+                      />
+                      <div
+                        className="w-6 h-6 rounded-full border-2 border-gray-200"
+                        style={{ backgroundColor: scheme.accent }}
+                      />
+                    </div>
+                    <span className="text-xs text-muted-foreground font-medium">{scheme.name}</span>
                   </div>
                 ))}
               </div>
@@ -171,32 +174,39 @@ const DesignPreviewModal: React.FC<DesignPreviewModalProps> = ({
             {/* Action Buttons */}
             <div className="space-y-3 pt-4">
               <Button
-                onClick={handleSelectTemplate}
-                disabled={isSelecting || isLoading}
+                onClick={() => {
+                  if (template.slug) {
+                    router.push(`/templates/${template.slug}/preview`);
+                  }
+                }}
+                variant="outline"
                 className="w-full"
                 size="lg"
               >
-                {isSelecting ? 'Selecting...' : 'Use This Design'}
+                View Full Preview
               </Button>
-              
+
+              <Button
+                onClick={handleSelectTemplate}
+                disabled={isSelecting}
+                className="w-full"
+                size="lg"
+              >
+                {isSelecting ? 'Redirecting...' : 'Use This Design'}
+              </Button>
+
               {!template.isPremium && (
                 <p className="text-center text-xs text-green-600 font-medium">
                   Free Template
                 </p>
               )}
-              
+
               {template.isPremium && (
                 <p className="text-center text-xs text-muted-foreground">
                   Premium features include advanced customization, priority support, and more
                 </p>
               )}
             </div>
-
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-3">
-                <p className="text-red-600 text-sm">{error}</p>
-              </div>
-            )}
           </div>
         </div>
       </DialogContent>

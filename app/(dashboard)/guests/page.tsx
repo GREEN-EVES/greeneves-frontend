@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth";
+import { useEventStore } from "@/stores/event";
 import Header from "@/components/Header";
 import { 
   Users, 
@@ -40,6 +41,10 @@ export default function GuestManagementPage() {
   const router = useRouter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isLoading = useAuthStore((state) => state.isLoading);
+  const { events, currentEventId } = useEventStore();
+
+  // Derive currentEvent from events array to ensure we get fresh data
+  const currentEvent = events.find(e => e.id === currentEventId) || null;
   
   const [guests, setGuests] = useState<Guest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -187,7 +192,9 @@ export default function GuestManagementPage() {
                 Guest Management
               </h1>
               <p className="text-muted-foreground mt-2">
-                Manage your wedding guest list and track RSVPs
+                {currentEvent
+                  ? `Manage your ${currentEvent.eventType === 'birthday' ? 'birthday' : 'wedding'} guest list and track RSVPs`
+                  : 'Manage your event guest list and track RSVPs'}
               </p>
             </div>
           </div>
@@ -360,7 +367,9 @@ export default function GuestManagementPage() {
           <CardHeader>
             <CardTitle>Guest List ({filteredGuests.length})</CardTitle>
             <CardDescription>
-              Manage your wedding guests and track their RSVP status
+              {currentEvent
+                ? `Manage your ${currentEvent.eventType === 'birthday' ? 'birthday' : 'event'} guests and track their RSVP status`
+                : 'Manage your event guests and track their RSVP status'}
             </CardDescription>
           </CardHeader>
           <CardContent>

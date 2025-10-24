@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Verify Payment</title>
+</head>
+<body>
+    <h1>Manual Payment Verification</h1>
+    <p>Reference: <strong>GE_1761160163340_n55xrvk9c</strong></p>
+    <button onclick="verifyPayment()">Verify Payment</button>
+    <pre id="result"></pre>
+
+    <script>
+        async function verifyPayment() {
+            const reference = 'GE_1761160163340_n55xrvk9c';
+            const token = localStorage.getItem('access_token');
+            
+            document.getElementById('result').textContent = 'Verifying...';
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/payments/verify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ reference })
+                });
+                
+                const data = await response.json();
+                document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+                
+                if (response.ok) {
+                    alert('Payment verified successfully!');
+                    window.location.href = 'http://localhost:3000/templates';
+                }
+            } catch (error) {
+                document.getElementById('result').textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -20,8 +20,8 @@ const Header = () => {
 			{/* Top notification bar */}
 			{/* <div className="bg-gradient-to-r from-[#7c8925] to-[#6A8E22] px-4 py-2 text-sm text-center text-white">
         Up to 40% off all Save the Dates and Invitations
-        <Link href="/designs" className="ml-2 underline cursor-pointer hover:no-underline text-yellow-200 hover:text-white transition">
-          Explore Designs
+        <Link href="/templates" className="ml-2 underline cursor-pointer hover:no-underline text-yellow-200 hover:text-white transition">
+          Explore Templates
         </Link>
       </div> */}
 
@@ -64,7 +64,7 @@ const Header = () => {
 									</div>
 									<DropdownMenuItem className="rounded-lg px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-[#7c8925]/15 hover:to-[#6A8E22]/15 hover:text-[#7c8925] transition-all duration-200 cursor-pointer focus:bg-gradient-to-r focus:from-[#7c8925]/15 focus:to-[#6A8E22]/15 group">
 										<Link
-											href="/designs"
+											href="/templates"
 											className="w-full font-medium group-hover:translate-x-1 transition-transform duration-200">
 											Wedding Website
 										</Link>
@@ -216,7 +216,7 @@ const Header = () => {
 								</h3>
 								<div className="space-y-2 ml-2">
 									<Link
-										href="/designs"
+										href="/templates"
 										onClick={() => setIsMobileMenuOpen(false)}
 										className="block py-2 text-gray-600 hover:text-[#7c8925] transition">
 										Wedding Website

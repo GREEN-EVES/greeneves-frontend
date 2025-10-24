@@ -8,6 +8,7 @@ interface AuthState {
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isInitialized: boolean;
 }
 
 interface AuthActions {
@@ -27,6 +28,7 @@ export const useAuthStore = create<AuthStore>()(
       token: null,
       isLoading: false,
       isAuthenticated: false,
+      isInitialized: false,  // Track if initialization has been called
 
       login: async (email: string, password: string) => {
         set({ isLoading: true });
@@ -104,8 +106,15 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       initialize: () => {
-        set({ isLoading: true });
         const token = localStorage.getItem('access_token');
+
+        // Set loading state and clear stale auth state while checking authentication
+        set({
+          isLoading: true,
+          isAuthenticated: false,  // Reset to false until validation completes
+          isInitialized: true,
+        });
+
         if (token) {
           // Validate token by fetching profile
           api.get('/auth/profile')
@@ -118,6 +127,7 @@ export const useAuthStore = create<AuthStore>()(
               });
             })
             .catch(() => {
+              // Token is invalid, clear everything
               localStorage.removeItem('access_token');
               set({
                 user: null,
@@ -127,11 +137,12 @@ export const useAuthStore = create<AuthStore>()(
               });
             });
         } else {
-          set({ 
+          // No token, clear auth state
+          set({
             user: null,
             token: null,
             isAuthenticated: false,
-            isLoading: false 
+            isLoading: false
           });
         }
       },

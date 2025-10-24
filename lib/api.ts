@@ -23,9 +23,15 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      // Don't auto-redirect for profile validation requests (used during initialization)
+      // Let the calling code handle the error
+      const isProfileCheck = error.config?.url?.includes('/auth/profile');
+
+      if (!isProfileCheck) {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

@@ -3,8 +3,9 @@
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth";
-import { useWeddingStore } from "@/stores/wedding";
-import { useDesignStore } from "@/stores/design";
+import { useEventStore } from "@/stores/event";
+import { useTemplateStore } from "@/stores/template";
+import { useUIStore } from "@/stores/ui";
 import Header from "@/components/Header";
 import { Calendar, Heart, Users, Settings, FileText, Camera, Gift, MapPin, Globe, Copy } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,25 +17,37 @@ export default function DashboardPage() {
 	const user = useAuthStore((state) => state.user);
 	const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 	const isLoading = useAuthStore((state) => state.isLoading);
+	const isInitialized = useAuthStore((state) => state.isInitialized);
 
-	const { progress, fetchProgress, fetchWeddingInfo, weddingInfo } = useWeddingStore();
-	const { fetchSelectedDesigns } = useDesignStore();
+	const { progress, fetchProgress, fetchEvents, events, currentEventId } = useEventStore();
+	const { fetchUserSubscriptions } = useTemplateStore();
+	const showToast = useUIStore((state) => state.showToast);
 
-	// console.log(weddingInfo);
+	// Derive currentEvent from events array to ensure we get fresh data
+	const currentEvent = events.find(e => e.id === currentEventId) || null;
+
 	useEffect(() => {
-		if (!isLoading && !isAuthenticated) {
+		// Wait for initialization to complete before making routing decisions
+		if (!isInitialized || isLoading) {
+			return;
+		}
+
+		// Only redirect if user is not authenticated after initialization completes
+		if (!isAuthenticated) {
 			router.push("/login");
 			return;
 		}
 
+		// Fetch data if authenticated
 		if (isAuthenticated) {
-			fetchWeddingInfo().catch(() => {});
+			fetchEvents().catch(() => {});
 			fetchProgress().catch(() => {});
-			fetchSelectedDesigns().catch(() => {});
+			fetchUserSubscriptions().catch(() => {});
 		}
-	}, [isAuthenticated, isLoading, router, fetchWeddingInfo, fetchProgress]);
+	}, [isAuthenticated, isLoading, isInitialized, router, fetchEvents, fetchProgress, fetchUserSubscriptions]);
 
-	if (isLoading) {
+	// Show loading spinner during initialization or while auth is loading
+	if (!isInitialized || isLoading) {
 		return (
 			<div className="min-h-screen flex items-center justify-center">
 				<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -46,8 +59,14 @@ export default function DashboardPage() {
 		return null;
 	}
 
-	const weddingProgress = progress?.overallProgress || 0;
-	const daysUntilWedding = progress?.daysUntilWedding || 0;
+	// Event-type aware text
+	const eventTypeText = currentEvent?.eventType === 'birthday' ? 'birthday' : 'wedding';
+	const eventName = currentEvent?.eventType === 'birthday'
+		? `${currentEvent?.celebrantName}'s Birthday`
+		: currentEvent?.eventName || 'your event';
+
+	const eventProgress = progress?.overallProgress || 0;
+	const daysUntilEvent = progress?.daysUntilWedding || 0;
 
 	const quickStats = [
 		{
@@ -64,13 +83,13 @@ export default function DashboardPage() {
 		},
 		{
 			label: "Tasks Done",
-			value: progress ? `${progress.timeline.completed}/${progress.timeline.total}` : "0/0",
+			value: progress?.timeline ? `${progress.timeline.completed}/${progress.timeline.total}` : "0/0",
 			icon: Calendar,
 			color: "text-green-600",
 		},
 		{
 			label: "Budget Used",
-			value: progress ? `${progress.budget.percentage}%` : "0%",
+			value: progress?.budget ? `${progress.budget.percentage}%` : "0%",
 			icon: Gift,
 			color: "text-purple-600",
 		},
@@ -78,7 +97,7 @@ export default function DashboardPage() {
 
 	const recentActivities = [
 		{ action: "Updated guest list", time: "2 hours ago", icon: Users },
-		{ action: "Chose wedding venue", time: "1 day ago", icon: MapPin },
+		{ action: `Chose ${eventTypeText} venue`, time: "1 day ago", icon: MapPin },
 		{ action: "Sent save the dates", time: "3 days ago", icon: FileText },
 		{ action: "Booked photographer", time: "1 week ago", icon: Camera },
 	];
@@ -87,7 +106,7 @@ export default function DashboardPage() {
 		{ task: "Finalize menu selections", due: "2 days", priority: "high" },
 		{ task: "Send invitations", due: "1 week", priority: "medium" },
 		{ task: "Book florist", due: "2 weeks", priority: "high" },
-		{ task: "Choose wedding favors", due: "3 weeks", priority: "low" },
+		{ task: `Choose ${eventTypeText} favors`, due: "3 weeks", priority: "low" },
 	];
 
 	return (
@@ -103,34 +122,38 @@ export default function DashboardPage() {
 								Welcome back, {user?.displayName || user?.email?.split("@")[0] || "there"}!
 							</h1>
 							<p className="text-muted-foreground mt-2">
-								Let&apos;s continue planning your perfect wedding
+								{currentEvent ? `Let's continue planning your perfect ${eventTypeText}` : 'Create your first event to get started'}
 							</p>
 						</div>
-						<div className="text-right">
-							<div className="text-2xl font-bold text-primary">{daysUntilWedding}</div>
-							<div className="text-sm text-muted-foreground">days until your wedding</div>
-						</div>
+						{currentEvent && (
+							<div className="text-right">
+								<div className="text-2xl font-bold text-primary">{daysUntilEvent}</div>
+								<div className="text-sm text-muted-foreground">days until your {eventTypeText}</div>
+							</div>
+						)}
 					</div>
 				</div>
 
-				{/* Wedding Progress */}
-				<Card className="mb-8">
-					<CardHeader>
-						<CardTitle className="flex items-center gap-2">
-							<Heart className="h-5 w-5 text-pink-600" />
-							Wedding Planning Progress
-						</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<div className="space-y-2">
-							<div className="flex justify-between text-sm">
-								<span>Overall Progress</span>
-								<span>{weddingProgress}% Complete</span>
+				{/* Event Progress */}
+				{currentEvent && (
+					<Card className="mb-8">
+						<CardHeader>
+							<CardTitle className="flex items-center gap-2">
+								<Heart className="h-5 w-5 text-pink-600" />
+								{eventTypeText === 'birthday' ? 'Birthday' : 'Wedding'} Planning Progress
+							</CardTitle>
+						</CardHeader>
+						<CardContent>
+							<div className="space-y-2">
+								<div className="flex justify-between text-sm">
+									<span>Overall Progress</span>
+									<span>{eventProgress}% Complete</span>
+								</div>
+								<Progress value={eventProgress} className="h-2" />
 							</div>
-							<Progress value={weddingProgress} className="h-2" />
-						</div>
-					</CardContent>
-				</Card>
+						</CardContent>
+					</Card>
+				)}
 
 				{/* Quick Stats */}
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -155,7 +178,7 @@ export default function DashboardPage() {
 					<Card>
 						<CardHeader>
 							<CardTitle>Recent Activity</CardTitle>
-							<CardDescription>Your latest wedding planning updates</CardDescription>
+							<CardDescription>Your latest {eventTypeText} planning updates</CardDescription>
 						</CardHeader>
 						<CardContent>
 							<div className="space-y-4">
@@ -178,7 +201,7 @@ export default function DashboardPage() {
 					<Card>
 						<CardHeader>
 							<CardTitle>Upcoming Tasks</CardTitle>
-							<CardDescription>Important items on your wedding checklist</CardDescription>
+							<CardDescription>Important items on your {eventTypeText} checklist</CardDescription>
 						</CardHeader>
 						<CardContent>
 							<div className="space-y-4">
@@ -207,60 +230,64 @@ export default function DashboardPage() {
 					</Card>
 				</div>
 
-				{/* Wedding Website Section */}
+				{/* Event Website Section */}
 				<Card className="mt-6">
 					<CardHeader>
 						<CardTitle className="flex items-center gap-2">
 							<Globe className="h-5 w-5 text-primary" />
-							Wedding Website
+							{eventTypeText === 'birthday' ? 'Birthday' : 'Wedding'} Website
 						</CardTitle>
 						<CardDescription>
-							{weddingInfo 
-								? "Your personalized wedding website is ready to share" 
-								: "Create your beautiful wedding website"}
+							{currentEvent
+								? `Your personalized ${eventTypeText} website is ready to share`
+								: `Create your beautiful ${eventTypeText} website`}
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
-						{weddingInfo ? (
+						{currentEvent ? (
 							<>
 								<div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border mb-4">
 									<div className="flex-1">
-										<p className="font-medium text-sm">Your Wedding Website:</p>
+										<p className="font-medium text-sm">Your {eventTypeText === 'birthday' ? 'Birthday' : 'Wedding'} Website:</p>
 										<p className="text-xs text-muted-foreground font-mono mt-1">
-											{typeof window !== "undefined"
-												? `${window.location.origin}/wedding/${user?.id}`
-												: `https://greeneves.com/wedding/${user?.id}`}
+											{typeof window !== "undefined" && currentEvent?.publicSlug
+												? `${window.location.origin}/events/${currentEvent.publicSlug}`
+												: `Publish your event to get a public URL`}
 										</p>
 									</div>
 									<div className="flex gap-2">
-										<Button
-											size="sm"
-											variant="outline"
-											onClick={() => {
-												if (typeof window !== "undefined" && user?.id) {
-													navigator.clipboard.writeText(
-														`${window.location.origin}/wedding/${user.id}`
-													);
-												}
-											}}>
-											<Copy className="h-4 w-4 mr-2" />
-											Copy Link
-										</Button>
-										<Button
-											size="sm"
-											onClick={() => user?.id && window.open(`/wedding/${user.id}`, "_blank")}>
-											View Site
-										</Button>
+										{currentEvent?.publicSlug && (
+											<>
+												<Button
+													size="sm"
+													variant="outline"
+													onClick={() => {
+														if (typeof window !== "undefined" && currentEvent?.publicSlug) {
+															navigator.clipboard.writeText(
+																`${window.location.origin}/events/${currentEvent.publicSlug}`
+															);
+														}
+													}}>
+													<Copy className="h-4 w-4 mr-2" />
+													Copy Link
+												</Button>
+												<Button
+													size="sm"
+													onClick={() => currentEvent?.publicSlug && window.open(`/events/${currentEvent.publicSlug}`, "_blank")}>
+													View Site
+												</Button>
+											</>
+										)}
 									</div>
 								</div>
 								<div className="flex gap-3">
-									<Button 
-										onClick={() => router.push('/designs')}
+									<Button
+										onClick={() => router.push('/templates')}
 										variant="outline"
 										className="flex-1"
 									>
 										<Settings className="h-4 w-4 mr-2" />
-										Change Design
+										Change Template
 									</Button>
 									<Button 
 										onClick={() => router.push(`/website-builder?edit=true`)}
@@ -274,13 +301,13 @@ export default function DashboardPage() {
 						) : (
 							<div className="text-center py-8">
 								<Globe className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-								<h3 className="text-lg font-semibold mb-2">Create Your Wedding Website</h3>
+								<h3 className="text-lg font-semibold mb-2">Create Your First Event</h3>
 								<p className="text-muted-foreground mb-6">
-									Choose a beautiful template and create your personalized wedding website in minutes
+									Choose a beautiful template and create your personalized event website in minutes
 								</p>
 								<div className="flex gap-3 justify-center">
-									<Button 
-										onClick={() => router.push('/designs')}
+									<Button
+										onClick={() => router.push('/templates')}
 										size="lg"
 									>
 										<Heart className="h-4 w-4 mr-2" />
@@ -292,10 +319,10 @@ export default function DashboardPage() {
 					</CardContent>
 				</Card>
 
-				{/* Wedding Planning Tools */}
+				{/* Event Planning Tools */}
 				<Card className="mt-6">
 					<CardHeader>
-						<CardTitle>Wedding Planning Tools</CardTitle>
+						<CardTitle>{currentEvent ? (eventTypeText === 'birthday' ? 'Birthday' : 'Wedding') : 'Event'} Planning Tools</CardTitle>
 						<CardDescription>Access all your planning tools in one place</CardDescription>
 					</CardHeader>
 					<CardContent>
@@ -309,27 +336,27 @@ export default function DashboardPage() {
 								},
 								{
 									title: "Budget Tracker",
-									desc: "Keep track of wedding expenses",
+									desc: "Keep track of event expenses",
 									icon: Gift,
 									href: "/budget",
 								},
 								{
 									title: "Timeline Planner",
-									desc: "Plan your wedding day schedule",
+									desc: "Plan your event day schedule",
 									icon: Calendar,
 									href: "/timeline",
 								},
 								{
 									title: "Photo Gallery",
-									desc: "Share and organize wedding photos",
+									desc: "Share and organize event photos",
 									icon: Camera,
 									href: "/photos",
 								},
 								{
-									title: "Design Gallery",
-									desc: "Browse wedding website designs",
+									title: "Template Gallery",
+									desc: "Browse event website templates",
 									icon: Settings,
-									href: "/designs",
+									href: "/templates",
 								},
 							].map((tool, index) => (
 								<Card key={index} className="hover:shadow-md transition-all duration-200 cursor-pointer border hover:border-gray-300">

@@ -25,8 +25,10 @@ export default function LoginPage() {
 	const searchParams = useSearchParams();
 	const login = useAuthStore((state) => state.login);
 	const isLoading = useAuthStore((state) => state.isLoading);
+	const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+	const isInitialized = useAuthStore((state) => state.isInitialized);
 	const showToast = useUIStore((state) => state.showToast);
-	
+
 	// Get template and redirect params from URL
 	const [templateId, setTemplateId] = useState<string | null>(null);
 	const [redirectPath, setRedirectPath] = useState<string>('/dashboard');
@@ -34,12 +36,12 @@ export default function LoginPage() {
 	useEffect(() => {
 		const template = searchParams?.get('template');
 		const redirect = searchParams?.get('redirect');
-		
+
 		if (template) {
 			setTemplateId(template);
 			localStorage.setItem('selectedTemplateId', template);
 		}
-		
+
 		if (redirect) {
 			setRedirectPath(redirect === 'website-builder' ? '/website-builder' : redirect);
 		} else if (template) {
@@ -47,6 +49,23 @@ export default function LoginPage() {
 			setRedirectPath('/website-builder');
 		}
 	}, [searchParams]);
+
+	// Redirect authenticated users to dashboard
+	useEffect(() => {
+		// Wait for initialization to complete before making routing decisions
+		if (!isInitialized || isLoading) {
+			return;
+		}
+
+		// Redirect if user is already authenticated
+		if (isAuthenticated) {
+			let finalRedirectPath = redirectPath;
+			if (templateId && redirectPath === '/website-builder') {
+				finalRedirectPath = `/website-builder?template=${templateId}`;
+			}
+			router.push(finalRedirectPath);
+		}
+	}, [isAuthenticated, isInitialized, isLoading, router, templateId, redirectPath]);
 
 	const {
 		register,

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Heart, Eye, Crown, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { useDesignStore } from '@/stores/design';
+import { useTemplateStore } from '@/stores/template';
 import { useAuthStore } from '@/stores/auth';
 import DesignPreviewModal from './DesignPreviewModal';
 import type { DesignTemplate } from '@/types';
@@ -31,7 +31,7 @@ const getColorHex = (color: string): string => {
 const DesignGallery: React.FC = () => {
   const router = useRouter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const { templates, isLoading, fetchTemplates, toggleFavorite } = useDesignStore();
+  const { templates, isLoading, fetchTemplates, toggleFavorite } = useTemplateStore();
   const [previewTemplate, setPreviewTemplate] = useState<DesignTemplate | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [userSubscription, setUserSubscription] = useState<any>(null);
@@ -42,9 +42,9 @@ const DesignGallery: React.FC = () => {
 
   const fetchUserSubscription = useCallback(async () => {
     if (!isAuthenticated) return;
-    
+
     try {
-      const response = await api.get('/payments/subscription');
+      const response = await api.get('/payments/subscriptions');
       setUserSubscription(response.data);
     } catch (error) {
       console.error('Failed to fetch user subscription:', error);
@@ -66,8 +66,10 @@ const DesignGallery: React.FC = () => {
   };
 
   const handlePreview = (template: DesignTemplate) => {
-    setPreviewTemplate(template);
-    setIsPreviewOpen(true);
+    // Navigate directly to preview page instead of opening modal
+    if (template.slug) {
+      router.push(`/templates/${template.slug}/preview`);
+    }
   };
 
   const handleToggleFavorite = async (template: DesignTemplate, e: React.MouseEvent) => {
@@ -121,8 +123,8 @@ const DesignGallery: React.FC = () => {
               <div key={template.id} className="group bg-card rounded-xl shadow-sm border border-border hover:shadow-lg transition-shadow duration-300">
                 {/* Image */}
                 <div className="relative overflow-hidden rounded-t-xl">
-                  <img 
-                    src={template.imageUrl} 
+                  <img
+                    src={template.previewImage}
                     alt={template.name}
                     className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
                   />
@@ -181,20 +183,29 @@ const DesignGallery: React.FC = () => {
                         </div>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground">{template.category}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {template.category?.name || 'General'}
+                    </p>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="flex space-x-1">
-                      {template.colors.slice(0, 2).map((color, index) => (
-                        <div 
-                          key={index}
-                          className="w-4 h-4 rounded-full border-2 border-white shadow-sm"
-                          style={{ backgroundColor: getColorHex(color) }}
-                        />
-                      ))}
+                      {template.colorSchemes && template.colorSchemes.length > 0 && (
+                        <>
+                          <div
+                            className="w-4 h-4 rounded-full border-2 border-white shadow-sm"
+                            style={{ backgroundColor: template.colorSchemes[0].primary }}
+                          />
+                          <div
+                            className="w-4 h-4 rounded-full border-2 border-white shadow-sm"
+                            style={{ backgroundColor: template.colorSchemes[0].secondary }}
+                          />
+                        </>
+                      )}
                     </div>
-                    <span className="text-xs text-muted-foreground">{template.collection}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {template.colorSchemes?.[0]?.name || 'Custom'}
+                    </span>
                   </div>
 
                   <Button 

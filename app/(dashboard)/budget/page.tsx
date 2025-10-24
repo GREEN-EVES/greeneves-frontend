@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth";
+import { useEventStore } from "@/stores/event";
 import Header from "@/components/Header";
 import { 
   Gift, 
@@ -52,6 +53,10 @@ export default function BudgetTrackerPage() {
   const router = useRouter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isLoading = useAuthStore((state) => state.isLoading);
+  const { events, currentEventId } = useEventStore();
+
+  // Derive currentEvent from events array to ensure we get fresh data
+  const currentEvent = events.find(e => e.id === currentEventId) || null;
   
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -199,7 +204,9 @@ export default function BudgetTrackerPage() {
                 Budget Tracker
               </h1>
               <p className="text-muted-foreground mt-2">
-                Track your wedding expenses and stay within budget
+                {currentEvent
+                  ? `Track your ${currentEvent.eventType === 'birthday' ? 'birthday' : 'event'} expenses and stay within budget`
+                  : 'Track your event expenses and stay within budget'}
               </p>
             </div>
           </div>
@@ -342,7 +349,7 @@ export default function BudgetTrackerPage() {
                       required
                       value={newItem.itemName}
                       onChange={(e) => setNewItem({...newItem, itemName: e.target.value})}
-                      placeholder="Wedding venue rental"
+                      placeholder="Venue rental"
                     />
                   </div>
                   <div>
@@ -397,7 +404,11 @@ export default function BudgetTrackerPage() {
           <Card className="mb-6">
             <CardHeader>
               <CardTitle>Set Total Budget</CardTitle>
-              <CardDescription>Set your overall wedding budget to track spending progress</CardDescription>
+              <CardDescription>
+                {currentEvent
+                  ? `Set your overall ${currentEvent.eventType === 'birthday' ? 'birthday' : 'event'} budget to track spending progress`
+                  : 'Set your overall event budget to track spending progress'}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={(e) => {
@@ -407,7 +418,9 @@ export default function BudgetTrackerPage() {
                 handleSetTotalBudget(amount);
               }} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Total Wedding Budget (₦) *</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Total {currentEvent?.eventType === 'birthday' ? 'Birthday' : 'Event'} Budget (₦) *
+                  </label>
                   <Input
                     name="budgetAmount"
                     type="number"
@@ -448,7 +461,9 @@ export default function BudgetTrackerPage() {
           <CardHeader>
             <CardTitle>Budget Items ({filteredItems.length})</CardTitle>
             <CardDescription>
-              Track all your wedding expenses and payments
+              {currentEvent
+                ? `Track all your ${currentEvent.eventType === 'birthday' ? 'birthday' : 'event'} expenses and payments`
+                : 'Track all your event expenses and payments'}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -457,7 +472,9 @@ export default function BudgetTrackerPage() {
                 <Gift className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No budget items found</h3>
                 <p className="text-muted-foreground mb-4">
-                  {budgetItems.length === 0 ? "Start tracking your wedding expenses" : "Try adjusting your search"}
+                  {budgetItems.length === 0
+                    ? `Start tracking your ${currentEvent?.eventType === 'birthday' ? 'birthday' : 'event'} expenses`
+                    : "Try adjusting your search"}
                 </p>
                 {budgetItems.length === 0 && (
                   <Button onClick={() => setShowAddForm(true)}>

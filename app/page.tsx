@@ -22,24 +22,7 @@ import CTA from "@/components/CTA";
 import HorizontalAssets from "@/components/HorizontalAssets";
 
 export default function Home() {
-	const router = useRouter();
-	const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-	const isLoading = useAuthStore((state) => state.isLoading);
-
-	useEffect(() => {
-		if (!isLoading && isAuthenticated) {
-			router.push("/dashboard");
-		}
-	}, [isAuthenticated, isLoading, router]);
-
-	if (isLoading) {
-		return (
-			<div className="min-h-screen flex items-center justify-center">
-				<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-			</div>
-		);
-	}
-
+	// Home page is accessible to everyone - no auth redirects needed
 	return (
 		<div className="min-h-screen bg-background">
 			<Header />
@@ -73,9 +56,9 @@ export default function Home() {
 					<div className="mb-8">
 						<DesignGallery />
 					</div>
-					<Link href="/designs">
+					<Link href="/templates">
 						<Button size="lg" variant="outline" className="text-lg px-8 py-6">
-							View All Designs
+							View All Templates
 						</Button>
 					</Link>
 				</div>

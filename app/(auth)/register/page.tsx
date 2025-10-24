@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Heart } from "lucide-react";
+import { useEffect } from "react";
 
 const registerSchema = z.object({
 	email: z.string().email("Invalid email address"),
@@ -25,10 +26,29 @@ export default function RegisterPage() {
 	const searchParams = useSearchParams();
 	const templateId = searchParams?.get('template');
 	const redirectTo = searchParams?.get('redirect');
-	
+
 	const register_action = useAuthStore((state) => state.register);
 	const isLoading = useAuthStore((state) => state.isLoading);
+	const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+	const isInitialized = useAuthStore((state) => state.isInitialized);
 	const showToast = useUIStore((state) => state.showToast);
+
+	// Redirect authenticated users to dashboard
+	useEffect(() => {
+		// Wait for initialization to complete before making routing decisions
+		if (!isInitialized || isLoading) {
+			return;
+		}
+
+		// Redirect if user is already authenticated
+		if (isAuthenticated) {
+			if (redirectTo === 'website-builder' && templateId) {
+				router.push(`/website-builder?template=${templateId}`);
+			} else {
+				router.push("/dashboard");
+			}
+		}
+	}, [isAuthenticated, isInitialized, isLoading, router, templateId, redirectTo]);
 
 	const {
 		register,

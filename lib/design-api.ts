@@ -1,44 +1,61 @@
 import api from './api';
-import type { DesignTemplate, WeddingDesign, GetDesignTemplatesParams } from '@/types';
+import type { DesignTemplate, TemplateCategory, GetDesignTemplatesParams, Subscription } from '@/types';
 
 export const designApi = {
-  // Get all design templates with optional filters
-  getTemplates: async (params?: GetDesignTemplatesParams): Promise<DesignTemplate[]> => {
-    const response = await api.get('/design-templates', { params });
+  // Get all templates with optional filters
+  getTemplates: async (params?: GetDesignTemplatesParams): Promise<{ data: DesignTemplate[]; meta: any }> => {
+    const response = await api.get('/templates', { params });
     return response.data;
   },
 
   // Get a specific template by ID
   getTemplate: async (id: string): Promise<DesignTemplate> => {
-    const response = await api.get(`/design-templates/${id}`);
+    const response = await api.get(`/templates/${id}`);
     return response.data;
   },
 
-  // Toggle favorite status for a template
-  toggleFavorite: async (templateId: string): Promise<{ isFavorited: boolean; message: string }> => {
-    const response = await api.post('/design-templates/favorite', { templateId });
+  // Get template by slug
+  getTemplateBySlug: async (slug: string): Promise<DesignTemplate> => {
+    const response = await api.get(`/templates/slug/${slug}`);
     return response.data;
   },
 
-  // Select a template for the user's wedding
-  selectTemplate: async (templateId: string, name?: string, customStyles?: any): Promise<WeddingDesign> => {
-    const response = await api.post('/design-templates/select', {
-      templateId,
-      name,
-      customStyles,
-    });
+  // Get template categories
+  getCategories: async (): Promise<TemplateCategory[]> => {
+    const response = await api.get('/templates/categories');
     return response.data;
   },
 
-  // Get user's favorite templates
-  getFavorites: async (): Promise<DesignTemplate[]> => {
-    const response = await api.get('/design-templates/favorites');
+  // Get user's purchased templates (subscriptions)
+  getUserSubscriptions: async (): Promise<{ subscriptions: Subscription[]; totalPurchased: number }> => {
+    const response = await api.get('/payments/subscriptions');
     return response.data;
   },
 
-  // Get user's selected designs
-  getSelectedDesigns: async (): Promise<WeddingDesign[]> => {
-    const response = await api.get('/design-templates/selected');
+  // Initialize payment for template purchase
+  initializePayment: async (data: {
+    email: string;
+    amount: number;
+    templateId: string;
+  }): Promise<{
+    paymentId: string;
+    reference: string;
+    authorizationUrl: string;
+    accessCode: string;
+  }> => {
+    const response = await api.post('/payments/initialize', data);
+    return response.data;
+  },
+
+  // Verify payment
+  verifyPayment: async (reference: string): Promise<{
+    paymentId: string;
+    subscriptionId: string;
+    status: string;
+    amount: number;
+    paidAt: string;
+  }> => {
+    const response = await api.post('/payments/verify', { reference });
     return response.data;
   },
 };
