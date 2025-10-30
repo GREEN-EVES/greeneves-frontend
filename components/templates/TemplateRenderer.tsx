@@ -138,6 +138,13 @@ export default function TemplateRenderer({
       );
     }
 
+    // Filter sections by event type
+    if (eventData.eventType === 'wedding') {
+      sections = sections.filter((section) => section.sectionType !== 'birthday_wishes');
+    } else if (eventData.eventType === 'birthday') {
+      sections = sections.filter((section) => section.sectionType !== 'bridal_party');
+    }
+
     return sections;
   };
 
@@ -193,6 +200,22 @@ export default function TemplateRenderer({
   };
 
   const sortedSections = getSortedSections();
+
+  // DEBUG LOGGING
+  console.log('=== TEMPLATE RENDERER DEBUG ===');
+  console.log('Template:', template?.name, 'ID:', template?.id);
+  console.log('Total sections from template:', template?.sections?.length);
+  console.log('Sections after sorting/filtering:', sortedSections.length);
+  console.log('Section details:', sortedSections.map(s => ({
+    id: s.id,
+    componentName: s.componentName,
+    sectionType: s.sectionType,
+    sortOrder: s.sortOrder,
+    isRequired: s.isRequired
+  })));
+  console.log('Customizations:', customizations);
+  console.log('Event Type:', eventData?.eventType);
+  console.log('Available components:', Object.keys(componentMap));
 
   if (!template || !eventData) {
     return (

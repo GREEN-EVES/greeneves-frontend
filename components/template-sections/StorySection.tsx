@@ -17,7 +17,8 @@ export const StorySection: React.FC<StorySectionProps> = ({ event, config = {} }
   const { layout = 'centered', showImage = true } = config;
 
   const storyTitle = event.eventType === 'birthday' ? 'Birthday Message' : 'Our Story';
-  const storyContent = event.eventType === 'birthday' ? event.birthdayMessage : event.ourStory;
+  const storyContent = event.eventType === 'birthday' ? event.details?.birthdayMessage : event.details?.ourStory;
+  const storyImageUrl = event.details?.storyImageUrl;
 
   if (!storyContent) return null;
 
@@ -45,14 +46,14 @@ export const StorySection: React.FC<StorySectionProps> = ({ event, config = {} }
   }
 
   // Split Layout with Image
-  if (layout === 'split' && showImage && event.storyImageUrl) {
+  if (layout === 'split' && showImage && storyImageUrl) {
     return (
       <div className="py-16">
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
               <img
-                src={event.storyImageUrl}
+                src={storyImageUrl}
                 alt={storyTitle}
                 className="w-full h-[400px] object-cover rounded-lg shadow-xl"
               />

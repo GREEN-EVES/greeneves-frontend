@@ -12,9 +12,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
+import { useEventStore } from '@/stores/event';
+
 const DesignsPage = () => {
   const router = useRouter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { events, fetchEvents } = useEventStore();
   const {
     templates,
     categories,
@@ -40,10 +43,11 @@ const DesignsPage = () => {
 
     // Only fetch subscriptions if user is authenticated
     if (isAuthenticated) {
-      console.log('✅ User is authenticated, fetching subscriptions...');
+      console.log('✅ User is authenticated, fetching subscriptions and events...');
       fetchUserSubscriptions();
+      fetchEvents();
     } else {
-      console.log('⚠️ User is not authenticated, skipping subscription fetch');
+      console.log('⚠️ User is not authenticated, skipping subscription and event fetch');
     }
   }, [isAuthenticated]);
 
@@ -68,6 +72,13 @@ const DesignsPage = () => {
       console.log('User not authenticated, redirecting to login...');
       router.push(`/login?redirect=/templates`);
       return;
+    }
+
+    const userHasEvent = events.length > 0;
+
+    if (userHasEvent) {
+        router.push(`/website-builder?template=${template.id}&edit=true`);
+        return;
     }
 
     if (hasUserPurchasedTemplate(template.id)) {

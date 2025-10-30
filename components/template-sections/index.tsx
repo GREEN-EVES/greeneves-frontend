@@ -2,6 +2,10 @@
 export { ThemeProvider, useTheme } from './ThemeProvider';
 export type { ColorScheme, FontConfig } from './ThemeProvider';
 
+// Re-export navigation
+export { SectionNavigation } from './SectionNavigation';
+export type { SectionNavigationProps } from './SectionNavigation';
+
 // Import components
 import { HeroSection } from './HeroSection';
 import { EventDetailsSection } from './EventDetailsSection';
@@ -11,6 +15,9 @@ import { RSVPSection } from './RSVPSection';
 import { BirthdayWishesSection } from './BirthdayWishesSection';
 import { GiftRegistrySection } from './GiftRegistrySection';
 import { MusicPlaylistSection } from './MusicPlaylistSection';
+import { BridalPartySection } from './BridalPartySection';
+import { MapSection } from './MapSection';
+import { ContributionsSection } from './ContributionsSection';
 
 // Re-export components
 export { HeroSection } from './HeroSection';
@@ -37,6 +44,15 @@ export type { GiftRegistrySectionProps } from './GiftRegistrySection';
 export { MusicPlaylistSection } from './MusicPlaylistSection';
 export type { MusicPlaylistSectionProps } from './MusicPlaylistSection';
 
+export { BridalPartySection } from './BridalPartySection';
+export type { BridalPartySectionProps } from './BridalPartySection';
+
+export { MapSection } from './MapSection';
+export type { MapSectionProps } from './MapSection';
+
+export { ContributionsSection } from './ContributionsSection';
+export type { ContributionsSectionProps } from './ContributionsSection';
+
 // Component mapping for dynamic rendering
 export const SECTION_COMPONENTS = {
   HeroSection: HeroSection,
@@ -47,6 +63,9 @@ export const SECTION_COMPONENTS = {
   BirthdayWishesSection: BirthdayWishesSection,
   GiftRegistrySection: GiftRegistrySection,
   MusicPlaylistSection: MusicPlaylistSection,
+  BridalPartySection: BridalPartySection,
+  MapSection: MapSection,
+  ContributionsSection: ContributionsSection,
 } as const;
 
 export type SectionComponentName = keyof typeof SECTION_COMPONENTS;

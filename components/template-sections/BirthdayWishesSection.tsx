@@ -84,7 +84,7 @@ export const BirthdayWishesSection: React.FC<BirthdayWishesSectionProps> = ({
             className="text-lg"
             style={{ fontFamily: fonts.body, color: colors.text || '#666' }}
           >
-            Leave your heartfelt wishes for {event.celebrantName || event.eventName}
+            Leave your heartfelt wishes for {event.details?.celebrantName || event.eventName}
           </p>
           {showWishesCount && (
             <p

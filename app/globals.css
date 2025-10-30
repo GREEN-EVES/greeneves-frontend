@@ -266,11 +266,27 @@ body:has([data-radix-dropdown-menu-content]) {
 	-webkit-text-fill-color: transparent;
 }
 
-/* decorative focus outline */
-:focus {
-	outline: 3px solid rgba(99, 102, 241, 0.12);
+/* Remove default focus outline */
+* {
+	outline: none;
+}
+
+/* Custom focus styles for accessibility */
+button:focus-visible,
+a:focus-visible {
+	outline: 2px solid rgba(99, 102, 241, 0.5);
 	outline-offset: 2px;
-	border-radius: 8px;
+	border-radius: 4px;
+}
+
+/* Input and textarea focus styles - no outline, use border instead */
+input:focus,
+textarea:focus,
+select:focus {
+	outline: none;
+	border-color: hsl(var(--primary));
+	box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+	transition: all 0.2s ease;
 }
 
 @keyframes scroll {

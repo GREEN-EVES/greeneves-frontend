@@ -19,19 +19,17 @@ import Header from "@/components/Header";
 import type { DesignTemplate } from "@/types";
 import api from "@/lib/api";
 
-const weddingInfoSchema = z.object({
-	coupleNames: z.string().min(2, "Couple names are required"),
-	weddingDate: z.string().min(1, "Wedding date is required"),
-	ceremonyTime: z.string().optional(),
-	ceremonyLocation: z.string().optional(),
-	receptionTime: z.string().optional(),
-	receptionLocation: z.string().optional(),
-	tagline: z.string().optional(),
-	story: z.string().optional(),
-	locationCity: z.string().optional(),
+const eventInfoSchema = z.object({
+  eventName: z.string().min(2, "An event name is required"),
+  eventDate: z.string().min(1, "An event date is required"),
+  eventTime: z.string().optional(),
+  venueName: z.string().optional(),
+  venueAddress: z.string().optional(),
+  tagline: z.string().optional(),
+  description: z.string().optional(),
 });
 
-type WeddingInfoForm = z.infer<typeof weddingInfoSchema>;
+type EventInfoForm = z.infer<typeof eventInfoSchema>;
 
 const steps = [
 	{ id: 1, title: "Event Type", description: "Choose event type" },
@@ -91,10 +89,10 @@ function WebsiteBuilderContent() {
 		formState: { errors },
 		watch,
 		setValue,
-	} = useForm<WeddingInfoForm>({
-		resolver: zodResolver(weddingInfoSchema),
+	} = useForm<EventInfoForm>({
+		resolver: zodResolver(eventInfoSchema),
 		defaultValues: {
-			coupleNames: user?.displayName || "",
+			eventName: user?.displayName || "",
 		},
 	});
 
@@ -139,24 +137,16 @@ function WebsiteBuilderContent() {
 	// Populate form with existing event info if available
 	useEffect(() => {
 		if (currentEvent) {
-			// For weddings, use brideName + groomName as couple names
-			const coupleNames =
-				currentEvent.eventType === "wedding"
-					? `${currentEvent.brideName || ""} & ${currentEvent.groomName || ""}`.trim()
-					: currentEvent.celebrantName || "";
-
-			// Format date for HTML5 date input (yyyy-MM-dd)
-			const formattedDate = currentEvent.eventDate ? new Date(currentEvent.eventDate).toISOString().split("T")[0] : "";
-
-			setValue("coupleNames", coupleNames);
-			setValue("weddingDate", formattedDate);
-			setValue("ceremonyTime", currentEvent.eventTime || "");
-			setValue("ceremonyLocation", currentEvent.venueName || "");
-			setValue("receptionTime", "");
-			setValue("receptionLocation", "");
-			setValue("tagline", "");
-			setValue("story", currentEvent.ourStory || currentEvent.birthdayMessage || "");
-			setValue("locationCity", currentEvent.venueAddress || "");
+      setValue("eventName", currentEvent.eventName);
+      setValue("eventDate", new Date(currentEvent.eventDate).toISOString().split("T")[0]);
+      setValue("eventTime", currentEvent.eventTime || "");
+      setValue("venueName", currentEvent.venueName || "");
+      setValue("venueAddress", currentEvent.venueAddress || "");
+      if (currentEvent.details) {
+        for (const key in currentEvent.details) {
+          setValue(key, currentEvent.details[key]);
+        }
+      }
 		}
 	}, [currentEvent, setValue]);
 
@@ -277,33 +267,25 @@ function WebsiteBuilderContent() {
 		}
 	};
 
-	const onSubmitEventInfo = async (data: WeddingInfoForm) => {
+	const onSubmitEventInfo = async (data: EventInfoForm) => {
 		try {
+      const { eventName, eventDate, eventTime, venueName, venueAddress, tagline, description, ...details } = data;
+
 			if (editMode || currentEvent) {
 				// Update existing event (either in edit mode or user already has event)
 				const updateData: any = {
-					eventName: data.coupleNames,
-					eventDate: new Date(data.weddingDate).toISOString(),
-					eventTime: data.ceremonyTime || undefined,
-					venueName: data.ceremonyLocation || undefined,
-					venueAddress: data.locationCity || undefined,
+					eventName: data.eventName,
+					eventDate: new Date(data.eventDate).toISOString(),
+					eventTime: data.eventTime || undefined,
+					venueName: data.venueName || undefined,
+					venueAddress: data.venueAddress || undefined,
+          details,
 				};
 
 				// Update template if a different one is selected
-				if (selectedTemplate?.id && selectedTemplate.id !== currentEvent?.selectedTemplateId) {
+				        if (selectedTemplate?.id) {
 					updateData.selectedTemplateId = selectedTemplate.id;
-					console.log("Updating template from", currentEvent?.selectedTemplateId, "to", selectedTemplate.id);
-				}
-
-				// Add event-specific fields
-				if (currentEvent?.eventType === "wedding") {
-					const names = data.coupleNames.split("&");
-					updateData.brideName = names[0]?.trim() || "";
-					updateData.groomName = names[1]?.trim() || "";
-					if (data.story) updateData.ourStory = data.story;
-				} else {
-					updateData.celebrantName = data.coupleNames;
-					if (data.story) updateData.birthdayMessage = data.story;
+					console.log("Updating template to", selectedTemplate.id);
 				}
 
 				await updateEvent(currentEvent!.id, updateData);
@@ -311,24 +293,14 @@ function WebsiteBuilderContent() {
 				// Create new event with selected event type using store method
 				const eventData: any = {
 					eventType: selectedEventType,
-					eventName: data.coupleNames,
-					eventDate: new Date(data.weddingDate).toISOString(),
-					eventTime: data.ceremonyTime || undefined,
-					venueName: data.ceremonyLocation || undefined,
-					venueAddress: data.locationCity || undefined,
+					eventName: data.eventName,
+					eventDate: new Date(data.eventDate).toISOString(),
+					eventTime: data.eventTime || undefined,
+					venueName: data.venueName || undefined,
+					venueAddress: data.venueAddress || undefined,
 					selectedTemplateId: selectedTemplate?.id, // Associate template with event
+          details,
 				};
-
-				// Add event-specific fields
-				if (selectedEventType === "wedding") {
-					const names = data.coupleNames.split("&");
-					eventData.brideName = names[0]?.trim() || "";
-					eventData.groomName = names[1]?.trim() || "";
-					if (data.story) eventData.ourStory = data.story;
-				} else {
-					eventData.celebrantName = data.coupleNames;
-					if (data.story) eventData.birthdayMessage = data.story;
-				}
 
 				await createEvent(eventData);
 			}
@@ -639,37 +611,66 @@ function WebsiteBuilderContent() {
 									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 										<div className="md:col-span-2">
 											<label className="block text-sm font-medium mb-2">
-												{selectedEventType === "birthday"
-													? "Celebrant Name"
-													: "Couple Names"}{" "}
+												Event Name
 												*
 											</label>
 											<Input
 												placeholder={
 													selectedEventType === "birthday"
-														? "John Smith"
-														: "John & Jane Smith"
+														? "John's 30th Birthday"
+														: "John & Jane's Wedding"
 												}
-												{...register("coupleNames")}
+												{...register("eventName")}
 											/>
-											{errors.coupleNames && (
+											{errors.eventName && (
 												<p className="text-sm text-red-500 mt-1">
-													{errors.coupleNames.message}
+													{errors.eventName.message}
 												</p>
 											)}
 										</div>
 
+                    {selectedEventType === 'wedding' && (
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            Bride's Name
+                          </label>
+                          <Input placeholder="Jane" {...register("brideName")} />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            Groom's Name
+                          </label>
+                          <Input placeholder="John" {...register("groomName")} />
+                        </div>
+                      </>
+                    )}
+
+                    {selectedEventType === 'birthday' && (
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            Celebrant's Name
+                          </label>
+                          <Input placeholder="John" {...register("celebrantName")} />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            Age (Optional)
+                          </label>
+                          <Input type="number" placeholder="30" {...register("age")} />
+                        </div>
+                      </>
+                    )}
+
 										<div>
 											<label className="block text-sm font-medium mb-2">
-												{selectedEventType === "birthday"
-													? "Birthday"
-													: "Wedding"}{" "}
-												Date *
+												Event Date *
 											</label>
-											<Input type="date" {...register("weddingDate")} />
-											{errors.weddingDate && (
+											<Input type="date" {...register("eventDate")} />
+											{errors.eventDate && (
 												<p className="text-sm text-red-500 mt-1">
-													{errors.weddingDate.message}
+													{errors.eventDate.message}
 												</p>
 											)}
 										</div>
@@ -680,18 +681,15 @@ function WebsiteBuilderContent() {
 											</label>
 											<Input
 												placeholder="Lagos, Nigeria"
-												{...register("locationCity")}
+												{...register("venueAddress")}
 											/>
 										</div>
 
 										<div>
 											<label className="block text-sm font-medium mb-2">
-												{selectedEventType === "birthday"
-													? "Party"
-													: "Ceremony"}{" "}
-												Time
+												Event Time
 											</label>
-											<Input placeholder="4:00 PM" {...register("ceremonyTime")} />
+											<Input placeholder="4:00 PM" {...register("eventTime")} />
 										</div>
 
 										<div className="md:col-span-2">
@@ -700,7 +698,7 @@ function WebsiteBuilderContent() {
 											</label>
 											<Input
 												placeholder="Event venue name"
-												{...register("ceremonyLocation")}
+												{...register("venueName")}
 											/>
 										</div>
 
@@ -716,9 +714,7 @@ function WebsiteBuilderContent() {
 
 										<div className="md:col-span-2">
 											<label className="block text-sm font-medium mb-2">
-												{selectedEventType === "birthday"
-													? "Birthday Message (Optional)"
-													: "Your Love Story (Optional)"}
+												Description (Optional)
 											</label>
 											<Textarea
 												placeholder={
@@ -727,7 +723,7 @@ function WebsiteBuilderContent() {
 														: "Tell your guests about how you met and your journey together..."
 												}
 												rows={4}
-												{...register("story")}
+												{...register("description")}
 											/>
 										</div>
 									</div>
