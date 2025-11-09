@@ -82,7 +82,7 @@ function PaymentSuccessContent() {
               <Button variant="outline" onClick={() => router.push('/dashboard')} className="flex-1">
                 Go to Dashboard
               </Button>
-              <Button onClick={() => router.push('/designs')} className="flex-1">
+              <Button onClick={() => router.push('/template-preview')} className="flex-1">
                 Try Again
               </Button>
             </div>
@@ -103,7 +103,7 @@ function PaymentSuccessContent() {
             Payment Successful!
           </CardTitle>
           <CardDescription>
-            Your wedding website is now live and ready to share
+            Your event website is now live and ready to share
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

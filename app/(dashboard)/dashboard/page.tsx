@@ -212,12 +212,12 @@ export default function DashboardPage() {
 					<CardHeader>
 						<CardTitle className="flex items-center gap-2">
 							<Globe className="h-5 w-5 text-primary" />
-							Wedding Website
+							Event Website
 						</CardTitle>
 						<CardDescription>
 							{weddingInfo 
-								? "Your personalized wedding website is ready to share" 
-								: "Create your beautiful wedding website"}
+								? "Your personalized event website is ready to share" 
+								: "Create your beautiful event website"}
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
@@ -253,34 +253,17 @@ export default function DashboardPage() {
 										</Button>
 									</div>
 								</div>
-								<div className="flex gap-3">
-									<Button 
-										onClick={() => router.push('/designs')}
-										variant="outline"
-										className="flex-1"
-									>
-										<Settings className="h-4 w-4 mr-2" />
-										Change Design
-									</Button>
-									<Button 
-										onClick={() => router.push(`/website-builder?edit=true`)}
-										className="flex-1"
-									>
-										<FileText className="h-4 w-4 mr-2" />
-										Edit Content
-									</Button>
-								</div>
 							</>
 						) : (
 							<div className="text-center py-8">
 								<Globe className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-								<h3 className="text-lg font-semibold mb-2">Create Your Wedding Website</h3>
+								<h3 className="text-lg font-semibold mb-2">Create Your Event Website</h3>
 								<p className="text-muted-foreground mb-6">
-									Choose a beautiful template and create your personalized wedding website in minutes
+									Choose a beautiful template and create your personalized event website in minutes
 								</p>
 								<div className="flex gap-3 justify-center">
 									<Button 
-										onClick={() => router.push('/designs')}
+										onClick={() => router.push('/template-preview')}
 										size="lg"
 									>
 										<Heart className="h-4 w-4 mr-2" />
@@ -326,10 +309,10 @@ export default function DashboardPage() {
 									href: "/photos",
 								},
 								{
-									title: "Design Gallery",
-									desc: "Browse wedding website designs",
+									title: "Template Gallery",
+									desc: "Browse event website templates",
 									icon: Settings,
-									href: "/designs",
+									href: "/template-preview",
 								},
 							].map((tool, index) => (
 								<Card key={index} className="hover:shadow-md transition-all duration-200 cursor-pointer border hover:border-gray-300">
