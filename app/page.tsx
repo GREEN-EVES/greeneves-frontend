@@ -9,7 +9,6 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 import { Heart, Calendar, Users, Camera, MapPin } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import HeroSection from "@/components/HeroSection";
 import DesignGallery from "@/components/DesignGallery";
 import Hero from "@/components/Hero";
 import Features from "@/components/Features";
@@ -29,11 +28,6 @@ export default function Home() {
 
 			{/* Hero Section */}
 			<Hero />
-			<div className="pt-[80px]">
-				{" "}
-				{/* Account for fixed header height */}
-				{/* <HeroSection /> */}
-			</div>
 			<Features />
 
 			<HorizontalAssets />
@@ -48,15 +42,15 @@ export default function Home() {
 			{/* Design Gallery Preview Section */}
 			<section className="py-16 bg-background">
 				<div className="container mx-auto px-4 text-center">
-					<h2 className="text-3xl font-display font-bold mb-4">Popular Wedding Designs</h2>
+					<h2 className="text-3xl font-display font-bold mb-4">Popular Event Templates</h2>
 					<p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-						Browse our most loved wedding website designs. Each template is fully customizable to match your
+						Browse our most loved event website templates. Each template is fully customizable to match your
 						unique style.
 					</p>
 					<div className="mb-8">
 						<DesignGallery />
 					</div>
-					<Link href="/templates">
+					<Link href="/template-preview">
 						<Button size="lg" variant="outline" className="text-lg px-8 py-6">
 							View All Templates
 						</Button>
@@ -110,9 +104,9 @@ export default function Home() {
 							<div className="flex justify-center mb-4">
 								<Heart className="w-12 h-12 text-primary" />
 							</div>
-							<CardTitle>Wedding Websites</CardTitle>
+							<CardTitle>Event Websites</CardTitle>
 							<CardDescription>
-								Create beautiful, personalized wedding websites for your guests
+								Create beautiful, personalized event websites for your guests
 							</CardDescription>
 						</CardHeader>
 					</Card>

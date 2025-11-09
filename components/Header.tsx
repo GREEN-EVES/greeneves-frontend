@@ -64,9 +64,9 @@ const Header = () => {
 									</div>
 									<DropdownMenuItem className="rounded-lg px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-[#7c8925]/15 hover:to-[#6A8E22]/15 hover:text-[#7c8925] transition-all duration-200 cursor-pointer focus:bg-gradient-to-r focus:from-[#7c8925]/15 focus:to-[#6A8E22]/15 group">
 										<Link
-											href="/templates"
+											href="/template-preview"
 											className="w-full font-medium group-hover:translate-x-1 transition-transform duration-200">
-											Wedding Website
+											Event Websites
 										</Link>
 									</DropdownMenuItem>
 									<DropdownMenuItem className="rounded-lg px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-[#7c8925]/15 hover:to-[#6A8E22]/15 hover:text-[#7c8925] transition-all duration-200 cursor-pointer focus:bg-gradient-to-r focus:from-[#7c8925]/15 focus:to-[#6A8E22]/15 group">
@@ -142,7 +142,7 @@ const Header = () => {
 									</div>
 									<DropdownMenuItem className="rounded-lg px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-[#7c8925]/15 hover:to-[#6A8E22]/15 hover:text-[#7c8925] transition-all duration-200 cursor-pointer focus:bg-gradient-to-r focus:from-[#7c8925]/15 focus:to-[#6A8E22]/15 group">
 										<Link
-											href="/planning"
+											href="/blog"
 											className="w-full font-medium group-hover:translate-x-1 transition-transform duration-200">
 											Wedding Planning
 										</Link>
@@ -216,10 +216,10 @@ const Header = () => {
 								</h3>
 								<div className="space-y-2 ml-2">
 									<Link
-										href="/templates"
+										href="/template-preview"
 										onClick={() => setIsMobileMenuOpen(false)}
 										className="block py-2 text-gray-600 hover:text-[#7c8925] transition">
-										Wedding Website
+										Event Websites
 									</Link>
 									<Link
 										href="/save-the-dates"

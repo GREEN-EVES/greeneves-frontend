@@ -93,7 +93,7 @@ function PaymentSuccessContent() {
               <Button variant="outline" onClick={() => router.push('/dashboard')} className="flex-1">
                 Go to Dashboard
               </Button>
-              <Button onClick={() => router.push('/templates')} className="flex-1">
+              <Button onClick={() => router.push('/template-preview')} className="flex-1">
                 Try Again
               </Button>
             </div>

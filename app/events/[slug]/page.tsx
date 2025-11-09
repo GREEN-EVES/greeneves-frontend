@@ -1,177 +1,100 @@
-"use client";
+import { notFound } from 'next/navigation';
+import { getTemplateComponent } from '@/components/event-templates/registry';
+import { Event } from '@/components/event-templates/types';
 
-import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
-import { Heart } from "lucide-react";
-import axios from "axios";
-import { ThemeProvider, SECTION_COMPONENTS, SectionNavigation, ColorScheme, FontConfig } from "@/components/template-sections";
+async function getEventBySlug(slug: string): Promise<Event | null> {
+  try {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+    const response = await fetch(`${apiUrl}/public/events/${slug}`, {
+      cache: 'no-store', // Always fetch fresh data
+    });
 
-interface EventData {
-	id: string;
-	eventName: string;
-	eventType: "wedding" | "birthday";
-	eventDate: string;
-	eventTime?: string;
-	venueName?: string;
-	venueAddress?: string;
-	coverImageUrl?: string;
-	galleryImages?: string[];
-	details?: Record<string, any>;
-	eventSchedule?: any[];
-	templateCustomization?: any;
-	customColors?: ColorScheme;
-	template?: {
-		id: string;
-		name: string;
-		colorSchemes: ColorScheme[];
-		fonts: FontConfig;
-		sections: TemplateSection[];
-	};
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching event:', error);
+    return null;
+  }
 }
 
-interface TemplateSection {
-	id: string;
-	componentName: string;
-	sortOrder: number;
-	config: any;
+export default async function EventPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const event = await getEventBySlug(params.slug);
+
+  // If event not found, show 404
+  if (!event) {
+    notFound();
+  }
+
+  // Get the template component from registry
+  const componentPath = event.template?.componentPath;
+  if (!componentPath) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center px-4">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Template Not Found
+          </h1>
+          <p className="text-gray-600">
+            This event doesn't have a template assigned.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const TemplateComponent = getTemplateComponent(componentPath);
+
+  if (!TemplateComponent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center px-4">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Template Not Available
+          </h1>
+          <p className="text-gray-600">
+            The template for this event could not be loaded.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Render the template with event data
+  return <TemplateComponent event={event} />;
 }
 
-// Default theme fallback
-const DEFAULT_COLORS: ColorScheme = {
-	primary: "#E91E63",
-	secondary: "#9C27B0",
-	accent: "#FF4081",
-	background: "#FFFFFF",
-	text: "#333333",
-};
+// Generate metadata for SEO
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const event = await getEventBySlug(params.slug);
 
-const DEFAULT_FONTS: FontConfig = {
-	heading: "'Playfair Display', serif",
-	body: "'Open Sans', sans-serif",
-};
+  if (!event) {
+    return {
+      title: 'Event Not Found',
+    };
+  }
 
-export default function PublicEventPage() {
-	const params = useParams();
-	const slug = params.slug as string;
+  const title =
+    event.eventType === 'WEDDING'
+      ? `${event.brideName} & ${event.groomName} - Wedding`
+      : `${event.celebrantName}'s Birthday Celebration`;
 
-	const [event, setEvent] = useState<EventData | null>(null);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
-
-	useEffect(() => {
-		const fetchEvent = async () => {
-			try {
-				setLoading(true);
-				const response = await axios.get(
-					`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"}/public/event/slug/${slug}`
-				);
-				setEvent(response.data.event);
-				setError(null);
-			} catch (err: any) {
-				console.error("Error fetching event:", err);
-				setError(err.response?.data?.message || "Failed to load event. Please check the URL and try again.");
-			} finally {
-				setLoading(false);
-			}
-		};
-
-		if (slug) {
-			fetchEvent();
-		}
-	}, [slug]);
-
-	if (loading) {
-		return (
-			<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-purple-50">
-				<div className="text-center">
-					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600 mx-auto mb-4"></div>
-					<p className="text-gray-600">Loading event...</p>
-				</div>
-			</div>
-		);
-	}
-
-	if (error || !event) {
-		return (
-			<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-purple-50">
-				<Card className="max-w-md w-full mx-4">
-					<CardContent className="p-8 text-center">
-						<Heart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-						<h1 className="text-2xl font-bold text-gray-900 mb-2">Event Not Found</h1>
-						<p className="text-gray-600">{error}</p>
-					</CardContent>
-				</Card>
-			</div>
-		);
-	}
-
-	// Debug logging
-	console.log("=== PUBLIC EVENT PAGE DEBUG ===");
-	console.log("Event data:", event);
-	console.log("Template data:", event.template);
-	console.log("Template sections:", event.template?.sections);
-
-	// Determine theme colors
-	const colors: ColorScheme = event.customColors || event.template?.colorSchemes?.[0] || DEFAULT_COLORS;
-
-	console.log("Resolved colors:", colors);
-
-	// Determine fonts
-	const fonts: FontConfig = event.template?.fonts || DEFAULT_FONTS;
-
-	console.log("Resolved fonts:", fonts);
-
-	// Get template sections or use default sections
-	const sections: TemplateSection[] = event.template?.sections || [
-		{ id: "1", componentName: "HeroSection", sortOrder: 1, config: { layout: "centered", showCountdown: true } },
-		{ id: "2", componentName: "EventDetailsSection", sortOrder: 2, config: { layout: "cards" } },
-		{ id: "3", componentName: "StorySection", sortOrder: 3, config: { layout: "centered" } },
-		{ id: "4", componentName: "GallerySection", sortOrder: 4, config: { layout: "grid", columns: 3 } },
-	];
-
-	console.log("Sections to render:", sections);
-
-	// Sort sections by order
-	let sortedSections = [...sections].sort((a, b) => a.sortOrder - b.sortOrder);
-
-	// Filter sections by event type
-	if (event.eventType === "wedding") {
-		sortedSections = sortedSections.filter((section) => section.componentName !== "BirthdayWishesSection");
-	} else if (event.eventType === "birthday") {
-		sortedSections = sortedSections.filter((section) => section.componentName !== "BridalPartySection");
-	}
-
-	console.log("Sorted sections:", sortedSections);
-
-	return (
-		<ThemeProvider colors={colors} fonts={fonts}>
-			<div className="min-h-screen">
-				{/* Navigation */}
-				<SectionNavigation sections={sortedSections} event={event} />
-
-				{/* Sections */}
-				{sortedSections.map((section) => {
-					console.log("Rendering section:", section);
-					const componentName = section.componentName as keyof typeof SECTION_COMPONENTS;
-					console.log("Looking for component:", componentName);
-					const Component = SECTION_COMPONENTS[componentName];
-					console.log("Found component:", Component ? "YES" : "NO");
-
-					if (!Component) {
-						console.warn(`Component "${section.componentName}" not found in SECTION_COMPONENTS`);
-						console.warn("Available components:", Object.keys(SECTION_COMPONENTS));
-						return null;
-					}
-
-					console.log("Rendering component with event:", event, "config:", section.config);
-					return (
-						<div key={section.id} id={`section-${section.id}`}>
-							<Component event={event} config={section.config} />
-						</div>
-					);
-				})}
-			</div>
-		</ThemeProvider>
-	);
+  return {
+    title,
+    description:
+      event.eventType === 'WEDDING'
+        ? `Join us in celebrating the wedding of ${event.brideName} and ${event.groomName}`
+        : `Celebrate ${event.celebrantName}'s ${event.age ? `${event.age}th ` : ''}birthday`,
+  };
 }
