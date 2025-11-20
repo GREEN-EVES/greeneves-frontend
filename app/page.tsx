@@ -1,8 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/stores/auth";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,7 +47,7 @@ export default function Home() {
 					<div className="mb-8">
 						<DesignGallery />
 					</div>
-					<Link href="/template-preview">
+					<Link href="/designs">
 						<Button size="lg" variant="outline" className="text-lg px-8 py-6">
 							View All Templates
 						</Button>

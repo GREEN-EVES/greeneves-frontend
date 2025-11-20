@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Check, Loader2, AlertCircle } from 'lucide-react';
+import { AxiosError } from 'axios';
 import { useUIStore } from '@/stores/ui';
 import { useTemplateStore } from '@/stores/template';
 import { designApi } from '@/lib/design-api';
@@ -44,24 +45,22 @@ function PaymentSuccessContent() {
 
         showToast('Payment successful! Your template subscription is now active.', 'success');
 
-        // Redirect to website builder after 3 seconds
+        // Redirect to event setup after 3 seconds
         setTimeout(() => {
           if (templateId) {
-            router.push(`/website-builder?template=${templateId}`);
+            router.push(`/event-setup?template=${templateId}`);
           } else {
-            router.push('/templates');
+            router.push('/designs');
           }
         }, 3000);
       } else {
         throw new Error('Payment verification failed');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Payment verification error:', error);
       setVerificationStatus('failed');
-      showToast(
-        error.response?.data?.message || 'Payment verification failed. Please contact support.',
-        'error'
-      );
+      const errorMessage = error instanceof Error ? error.message : 'Payment verification failed. Please contact support.';
+      showToast(errorMessage, 'error');
     }
   };
 
@@ -93,7 +92,7 @@ function PaymentSuccessContent() {
               <Button variant="outline" onClick={() => router.push('/dashboard')} className="flex-1">
                 Go to Dashboard
               </Button>
-              <Button onClick={() => router.push('/template-preview')} className="flex-1">
+              <Button onClick={() => router.push('/designs')} className="flex-1">
                 Try Again
               </Button>
             </div>
@@ -137,9 +136,9 @@ function PaymentSuccessContent() {
             <Button
               onClick={() => {
                 if (templateId) {
-                  router.push(`/website-builder?template=${templateId}`);
+                  router.push(`/event-setup?template=${templateId}`);
                 } else {
-                  router.push('/templates');
+                  router.push('/designs');
                 }
               }}
             >

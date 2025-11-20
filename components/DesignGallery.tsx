@@ -6,69 +6,52 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useTemplateStore } from '@/stores/template';
 import { useAuthStore } from '@/stores/auth';
-import DesignPreviewModal from './DesignPreviewModal';
 import type { DesignTemplate } from '@/types';
 import api from '@/lib/api';
-
-const getColorHex = (color: string): string => {
-  const colorMap: { [key: string]: string } = {
-    cream: '#F5F5DC',
-    gold: '#FFD700',
-    purple: '#8B5CF6',
-    green: '#10B981',
-    silver: '#C0C0C0',
-    white: '#FFFFFF',
-    beige: '#F5F5DC',
-    brown: '#8B4513',
-    blue: '#3B82F6',
-    pink: '#EC4899',
-    black: '#000000',
-  };
-  
-  return colorMap[color.toLowerCase()] || '#6B7280';
-};
 
 const DesignGallery: React.FC = () => {
   const router = useRouter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { templates, isLoading, fetchTemplates, toggleFavorite } = useTemplateStore();
-  const [previewTemplate, setPreviewTemplate] = useState<DesignTemplate | null>(null);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [userSubscription, setUserSubscription] = useState<any>(null);
+  const [userSubscriptions, setUserSubscriptions] = useState<Array<{ templateId: string }>>([]);
 
   useEffect(() => {
     fetchTemplates();
   }, [fetchTemplates]);
 
-  const fetchUserSubscription = useCallback(async () => {
+  const fetchUserSubscriptions = useCallback(async () => {
     if (!isAuthenticated) return;
 
     try {
       const response = await api.get('/payments/subscriptions');
-      setUserSubscription(response.data);
+      console.log('📦 User subscriptions:', response.data);
+      // Response format: { subscriptions: [...], totalPurchased: number }
+      setUserSubscriptions(response.data.subscriptions || []);
     } catch (error) {
-      console.error('Failed to fetch user subscription:', error);
-      setUserSubscription(null);
+      console.error('Failed to fetch user subscriptions:', error);
+      setUserSubscriptions([]);
     }
   }, [isAuthenticated]);
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchUserSubscription();
+      fetchUserSubscriptions();
     }
-  }, [isAuthenticated, fetchUserSubscription]);
+  }, [isAuthenticated, fetchUserSubscriptions]);
 
-  const hasActivePremium = () => {
-    return userSubscription && 
-      userSubscription.status === 'active' && 
-      (userSubscription.plan === 'premium' || userSubscription.plan === 'enterprise') &&
-      (!userSubscription.expiresAt || new Date(userSubscription.expiresAt) > new Date());
+  // Check if user has access to a specific template
+  const hasTemplateAccess = (templateId: string, isPremium: boolean) => {
+    // Free templates are always accessible
+    if (!isPremium) return true;
+
+    // Premium templates require active subscription
+    return userSubscriptions.some(sub => sub.templateId === templateId);
   };
 
   const handlePreview = (template: DesignTemplate) => {
-    // Navigate directly to preview page instead of opening modal
+    // Navigate directly to preview page under /designs
     if (template.slug) {
-      router.push(`/templates/${template.slug}/preview`);
+      router.push(`/designs/${template.slug}`);
     }
   };
 
@@ -85,12 +68,21 @@ const DesignGallery: React.FC = () => {
     if (!isAuthenticated) {
       // Store template ID in localStorage for after registration
       localStorage.setItem('selectedTemplateId', template.id);
-      router.push(`/register?template=${template.id}&redirect=website-builder`);
+      router.push(`/register?template=${template.id}&redirect=event-setup`);
       return;
     }
-    
-    // User is authenticated, go directly to website builder
-    router.push(`/website-builder?template=${template.id}`);
+
+    // Check if user has access to this template
+    const hasAccess = hasTemplateAccess(template.id, template.isPremium);
+
+    if (template.isPremium && !hasAccess) {
+      // Premium template not purchased - go to checkout page to purchase
+      router.push(`/designs/${template.slug}/checkout`);
+      return;
+    }
+
+    // User has access (free template or purchased premium), go to event setup
+    router.push(`/event-setup?template=${template.id}`);
   };
 
   if (isLoading) {
@@ -99,12 +91,12 @@ const DesignGallery: React.FC = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[...Array(12)].map((_, index) => (
-              <div key={index} className="bg-card rounded-xl shadow-sm border border-border animate-pulse">
+              <div key={index} className="bg-white rounded-xl shadow-md border-2 border-gray-200 animate-pulse">
                 <div className="bg-gray-200 h-48 rounded-t-xl" />
-                <div className="p-4 space-y-3">
-                  <div className="bg-gray-200 h-4 rounded w-3/4" />
-                  <div className="bg-gray-200 h-3 rounded w-1/2" />
-                  <div className="bg-gray-200 h-8 rounded" />
+                <div className="p-5 space-y-3">
+                  <div className="bg-gray-200 h-5 rounded w-3/4" />
+                  <div className="bg-gray-200 h-4 rounded w-1/2" />
+                  <div className="bg-gray-200 h-10 rounded" />
                 </div>
               </div>
             ))}
@@ -120,7 +112,7 @@ const DesignGallery: React.FC = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {templates.map((template) => (
-              <div key={template.id} className="group bg-card rounded-xl shadow-sm border border-border hover:shadow-lg transition-shadow duration-300">
+              <div key={template.id} className="group bg-white rounded-xl shadow-md border-2 border-gray-200 hover:shadow-xl transition-all duration-300" style={{ borderColor: '#e5e7eb' }} onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(123, 137, 37, 0.3)'} onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}>
                 {/* Image */}
                 <div className="relative overflow-hidden rounded-t-xl">
                   <img
@@ -128,36 +120,41 @@ const DesignGallery: React.FC = () => {
                     alt={template.name}
                     className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  
-                  {template.isPremium && (
-                    <div className={`absolute top-2 right-2 p-1 rounded-full ${
-                      hasActivePremium() 
-                        ? 'bg-green-500 text-white' 
-                        : 'bg-yellow-500 text-white'
-                    }`}>
-                      {hasActivePremium() ? (
-                        <Check className="h-3 w-3" />
+
+                  {/* Badge for Premium/Free status */}
+                  <div className="absolute top-3 right-3">
+                    {template.isPremium ? (
+                      hasTemplateAccess(template.id, template.isPremium) ? (
+                        <div className="bg-green-500 text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-bold shadow-lg">
+                          <Check className="h-3 w-3" />
+                          <span>Purchased</span>
+                        </div>
                       ) : (
-                        <Crown className="h-3 w-3" />
-                      )}
-                    </div>
-                  )}
-                  
+                        <div className="bg-yellow-500 text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-bold shadow-lg">
+                          <Crown className="h-3 w-3" />
+                          <span>Premium</span>
+                        </div>
+                      )
+                    ) : (
+                      <div className="text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg" style={{ backgroundColor: 'hsl(68 61% 34%)' }}>
+                        FREE
+                      </div>
+                    )}
+                  </div>
+
                   {/* Overlay actions */}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center space-x-3">
-                    <Button 
-                      size="sm" 
-                      variant="secondary" 
-                      className="bg-white/90 text-foreground hover:bg-white"
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center space-x-3">
+                    <Button
+                      size="sm"
+                      className="bg-white text-gray-900 hover:bg-gray-100 font-semibold shadow-lg"
                       onClick={() => handlePreview(template)}
                     >
                       <Eye className="h-4 w-4 mr-2" />
                       Preview
                     </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      className="text-white hover:bg-white/20"
+                    <Button
+                      size="sm"
+                      className="bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm"
                       onClick={(e) => handleToggleFavorite(template, e)}
                     >
                       <Heart className={`h-4 w-4 ${template.isFavorited ? 'fill-current text-red-500' : ''}`} />
@@ -166,56 +163,71 @@ const DesignGallery: React.FC = () => {
                 </div>
 
                 {/* Content */}
-                <div className="p-4 space-y-3">
-                  <div className="space-y-1">
+                <div className="p-5 space-y-3">
+                  <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-medium text-lg text-foreground">{template.name}</h3>
-                      {template.isPremium && template.price && (
-                        <div className="flex items-center space-x-2">
-                          {hasActivePremium() && (
-                            <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                              Purchased
-                            </span>
-                          )}
-                          <span className={`text-sm font-semibold ${
-                            hasActivePremium() ? 'line-through text-gray-400' : 'text-primary'
-                          }`}>₦{template.price}</span>
-                        </div>
-                      )}
+                      <h3 className="font-bold text-lg text-gray-900">{template.name}</h3>
+                      {template.isPremium && template.price ? (
+                        <span
+                          className="text-sm font-bold"
+                          style={{
+                            color: hasTemplateAccess(template.id, template.isPremium)
+                              ? '#9ca3af'
+                              : 'hsl(68 61% 34%)',
+                            textDecoration: hasTemplateAccess(template.id, template.isPremium)
+                              ? 'line-through'
+                              : 'none'
+                          }}
+                        >
+                          ₦{template.price.toLocaleString()}
+                        </span>
+                      ) : !template.isPremium ? (
+                        <span className="text-sm font-bold" style={{ color: 'hsl(68 61% 34%)' }}>FREE</span>
+                      ) : null}
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      {template.category?.name || 'General'}
+                    <p className="text-sm text-gray-600 line-clamp-2">
+                      {template.description || template.category?.name || 'Event Template'}
+                    </p>
+                    <p className="text-xs font-semibold text-gray-500">
+                      {template.eventType === 'WEDDING' ? '💒 Wedding' : '🎂 Birthday'}
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex space-x-1">
-                      {template.colorSchemes && template.colorSchemes.length > 0 && (
-                        <>
-                          <div
-                            className="w-4 h-4 rounded-full border-2 border-white shadow-sm"
-                            style={{ backgroundColor: template.colorSchemes[0].primary }}
-                          />
-                          <div
-                            className="w-4 h-4 rounded-full border-2 border-white shadow-sm"
-                            style={{ backgroundColor: template.colorSchemes[0].secondary }}
-                          />
-                        </>
-                      )}
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {template.colorSchemes?.[0]?.name || 'Custom'}
-                    </span>
-                  </div>
-
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
+                  <Button
+                    className="w-full font-semibold shadow-sm hover:shadow-md transition-all"
+                    style={{
+                      backgroundColor: template.isPremium && !hasTemplateAccess(template.id, template.isPremium)
+                        ? 'hsl(68 61% 34%)'
+                        : 'transparent',
+                      color: template.isPremium && !hasTemplateAccess(template.id, template.isPremium)
+                        ? 'white'
+                        : 'hsl(68 61% 34%)',
+                      borderWidth: '2px',
+                      borderColor: 'hsl(68 61% 34%)'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (template.isPremium && !hasTemplateAccess(template.id, template.isPremium)) {
+                        e.currentTarget.style.backgroundColor = 'hsl(68 61% 28%)';
+                      } else {
+                        e.currentTarget.style.backgroundColor = 'hsl(68 61% 34%)';
+                        e.currentTarget.style.color = 'white';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (template.isPremium && !hasTemplateAccess(template.id, template.isPremium)) {
+                        e.currentTarget.style.backgroundColor = 'hsl(68 61% 34%)';
+                      } else {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.color = 'hsl(68 61% 34%)';
+                      }
+                    }}
                     onClick={() => handleUseDesign(template)}
                   >
-                    {template.isPremium && hasActivePremium() 
-                      ? "Use Premium Design" 
-                      : "Use This Design"
+                    {!template.isPremium
+                      ? "Use Free Design"
+                      : hasTemplateAccess(template.id, template.isPremium)
+                      ? "Use Purchased Design"
+                      : "Purchase & Use Design"
                     }
                   </Button>
                 </div>
@@ -226,23 +238,17 @@ const DesignGallery: React.FC = () => {
           {/* Load more button - could implement pagination later */}
           {templates.length > 0 && (
             <div className="text-center mt-12">
-              <Button variant="outline" size="lg" className="px-12" disabled>
+              <Button
+                size="lg"
+                className="px-12 font-semibold bg-gray-100 text-gray-500 cursor-not-allowed border-2 border-gray-200"
+                disabled
+              >
                 Showing all designs
               </Button>
             </div>
           )}
         </div>
       </section>
-
-      {/* Preview Modal */}
-      <DesignPreviewModal
-        template={previewTemplate}
-        isOpen={isPreviewOpen}
-        onClose={() => {
-          setIsPreviewOpen(false);
-          setPreviewTemplate(null);
-        }}
-      />
     </>
   );
 };

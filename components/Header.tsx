@@ -64,7 +64,7 @@ const Header = () => {
 									</div>
 									<DropdownMenuItem className="rounded-lg px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-[#7c8925]/15 hover:to-[#6A8E22]/15 hover:text-[#7c8925] transition-all duration-200 cursor-pointer focus:bg-gradient-to-r focus:from-[#7c8925]/15 focus:to-[#6A8E22]/15 group">
 										<Link
-											href="/template-preview"
+											href="/designs"
 											className="w-full font-medium group-hover:translate-x-1 transition-transform duration-200">
 											Event Websites
 										</Link>
@@ -216,7 +216,7 @@ const Header = () => {
 								</h3>
 								<div className="space-y-2 ml-2">
 									<Link
-										href="/template-preview"
+										href="/designs"
 										onClick={() => setIsMobileMenuOpen(false)}
 										className="block py-2 text-gray-600 hover:text-[#7c8925] transition">
 										Event Websites
@@ -270,7 +270,7 @@ const Header = () => {
 								</h3>
 								<div className="space-y-2 ml-2">
 									<Link
-										href="/planning"
+										href="/blog"
 										onClick={() => setIsMobileMenuOpen(false)}
 										className="block py-2 text-gray-600 hover:text-[#7c8925] transition">
 										Wedding Planning
@@ -294,8 +294,8 @@ const Header = () => {
 							<div className="text-gray-600 text-sm border-t pt-4">Find an Event</div>
 
 							{/* Auth Buttons */}
-							<div className="border-t pt-4" onClick={() => setIsMobileMenuOpen(false)}>
-								<AuthButtons />
+							<div className="border-t pt-4">
+								<AuthButtons isMobile={true} onNavigate={() => setIsMobileMenuOpen(false)} />
 							</div>
 						</nav>
 					</motion.div>
@@ -305,7 +305,7 @@ const Header = () => {
 	);
 };
 
-const AuthButtons = () => {
+const AuthButtons = ({ isMobile = false, onNavigate }: { isMobile?: boolean; onNavigate?: () => void }) => {
 	const user = useAuthStore((state) => state.user);
 	const logout = useAuthStore((state) => state.logout);
 	const router = useRouter();
@@ -313,9 +313,40 @@ const AuthButtons = () => {
 	const handleSignOut = () => {
 		logout();
 		router.push("/");
+		if (onNavigate) onNavigate();
+	};
+
+	const handleNavigation = () => {
+		if (onNavigate) onNavigate();
 	};
 
 	if (user) {
+		if (isMobile) {
+			return (
+				<div className="flex flex-col gap-3">
+					<div className="flex items-center gap-2 text-sm text-gray-700 pb-3 border-b">
+						<User className="w-4 h-4 text-[#7c8925]" />
+						<span className="font-medium">{user.email}</span>
+					</div>
+					<Button
+						variant="outline"
+						size="sm"
+						className="w-full justify-start text-gray-700 hover:text-[#7c8925] hover:bg-[#7c8925]/10"
+						asChild
+					>
+						<Link href="/dashboard" onClick={handleNavigation}>Dashboard</Link>
+					</Button>
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={handleSignOut}
+						className="w-full justify-start text-gray-700 hover:text-red-600 hover:bg-red-50">
+						Sign Out
+					</Button>
+				</div>
+			);
+		}
+
 		return (
 			<div className="flex items-center gap-3">
 				<div className="flex items-center gap-2 text-sm">
@@ -332,6 +363,25 @@ const AuthButtons = () => {
 					className="text-white hover:text-yellow-200 hover:bg-white/10">
 					Sign Out
 				</Button>
+			</div>
+		);
+	}
+
+	if (isMobile) {
+		return (
+			<div className="flex flex-col gap-3">
+				<Link
+					href="/login"
+					onClick={handleNavigation}
+					className="block py-2 px-4 text-center text-gray-700 hover:text-[#7c8925] hover:bg-gray-100 rounded-lg transition text-sm font-medium border border-gray-300">
+					Log in
+				</Link>
+				<Link
+					href="/register"
+					onClick={handleNavigation}
+					className="block py-2 px-4 text-center rounded-lg text-sm bg-gradient-to-r from-[#c3d265] to-[#6A8E22] text-white font-semibold shadow-md hover:brightness-105 transition">
+					Get Started
+				</Link>
 			</div>
 		);
 	}

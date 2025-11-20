@@ -8,13 +8,15 @@ import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import api from "@/lib/api";
 import { useUIStore } from "@/stores/ui";
 
+import { PaymentVerification } from '@/types';
+
 function PaymentCallbackContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const showToast = useUIStore((state) => state.showToast);
 	
 	const [status, setStatus] = useState<'verifying' | 'success' | 'failed' | 'cancelled'>('verifying');
-	const [paymentData, setPaymentData] = useState<any>(null);
+	const [paymentData, setPaymentData] = useState<PaymentVerification | null>(null);
 
 	useEffect(() => {
 		const reference = searchParams?.get('reference');
@@ -49,12 +51,12 @@ function PaymentCallbackContent() {
 
 	const handleContinue = () => {
 		// Redirect to website builder to continue or publish
-		router.push('/website-builder?payment=success');
+		router.push('/event-setup?payment=success');
 	};
 
 	const handleRetry = () => {
 		// Go back to website builder payment step
-		router.push('/website-builder');
+		router.push('/event-setup');
 	};
 
 	if (status === 'verifying') {

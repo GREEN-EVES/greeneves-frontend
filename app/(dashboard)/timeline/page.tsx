@@ -1,13 +1,21 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import dynamicImport from "next/dynamic";
 import { useAuthStore } from "@/stores/auth";
 import { useEventStore } from "@/stores/event";
-import Header from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Check, Plus } from "lucide-react";
+import { Calendar, Plus } from "lucide-react";
+
+// Force dynamic rendering to prevent SSR issues
+export const dynamic = 'force-dynamic';
+
+const Header = dynamicImport(() => import("@/components/Header"), {
+	ssr: false,
+	loading: () => <div className="h-[80px]" />,
+});
 
 interface TimelineEvent {
 	time: string;
@@ -17,13 +25,12 @@ interface TimelineEvent {
 
 export default function TimelinePage() {
 	const router = useRouter();
-	const user = useAuthStore((state) => state.user);
 	const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 	const isLoading = useAuthStore((state) => state.isLoading);
 	const { events, currentEventId, fetchEvents } = useEventStore();
 
 	// Derive currentEvent from events array to ensure we get fresh data
-	const currentEvent = events.find(e => e.id === currentEventId) || null;
+	const currentEvent = events.find((e) => e.id === currentEventId) || null;
 
 	const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
 
@@ -63,8 +70,8 @@ export default function TimelinePage() {
 	return (
 		<div className="min-h-screen bg-background">
 			<Header />
-			
-			<div className="container mx-auto px-4 py-8">
+
+			<div className="container mx-auto px-4 py-8 pt-24">
 				<div className="mb-8">
 					<h1 className="text-3xl font-bold text-foreground mb-2">Timeline Planner</h1>
 					<p className="text-muted-foreground">Plan your wedding day schedule and important milestones</p>
@@ -87,12 +94,12 @@ export default function TimelinePage() {
 					<CardHeader>
 						<CardTitle className="flex items-center gap-2">
 							<Calendar className="h-5 w-5" />
-							{currentEvent?.eventType === 'birthday' ? 'Birthday' : 'Event'} Schedule
+							{currentEvent?.eventType === "birthday" ? "Birthday" : "Event"} Schedule
 						</CardTitle>
 						<CardDescription>
 							{currentEvent
-								? `Your ${currentEvent.eventType === 'birthday' ? 'birthday' : 'event'} day timeline`
-								: 'Your event day timeline'}
+								? `Your ${currentEvent.eventType === "birthday" ? "birthday" : "event"} day timeline`
+								: "Your event day timeline"}
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
@@ -115,14 +122,22 @@ export default function TimelinePage() {
 						) : (
 							<div className="space-y-4">
 								{timelineEvents.map((event, index) => (
-									<div key={index} className="flex items-start gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+									<div
+										key={index}
+										className="flex items-start gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
 										<div className="flex-shrink-0 w-16 text-center">
-											<div className="text-sm font-semibold text-primary">{event.time}</div>
+											<div className="text-sm font-semibold text-primary">
+												{event.time}
+											</div>
 										</div>
 										<div className="flex-1">
-											<h4 className="font-semibold text-foreground">{event.title}</h4>
+											<h4 className="font-semibold text-foreground">
+												{event.title}
+											</h4>
 											{event.description && (
-												<p className="text-sm text-muted-foreground mt-1">{event.description}</p>
+												<p className="text-sm text-muted-foreground mt-1">
+													{event.description}
+												</p>
 											)}
 										</div>
 									</div>

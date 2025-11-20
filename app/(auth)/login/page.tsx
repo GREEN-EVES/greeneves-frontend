@@ -1,8 +1,10 @@
 import LoginPage from "@/components/pages/(auth)/Login";
-import React from "react";
+import React, { Suspense } from "react";
 
 async function page() {
-	return <LoginPage />;
+	<Suspense fallback="Loading...">
+		return <LoginPage />;
+	</Suspense>;
 }
 
 export default page;

@@ -10,25 +10,25 @@
 	--color-sage: 120 9% 83%;
 	--color-rose-gold: 14 100% 85%;
 
-	--color-border: 36 25% 88%;
-	--color-input: 36 25% 88%;
-	--color-ring: 271 81% 56%;
-	--color-background: 36 25% 96%;
-	--color-foreground: 20 14.3% 4.1%;
-	--color-primary: 271 81% 56%;
-	--color-primary-foreground: 0 0% 98%;
-	--color-secondary: 36 25% 94%;
-	--color-secondary-foreground: 20 14.3% 4.1%;
-	--color-destructive: 0 84.2% 60.2%;
-	--color-destructive-foreground: 0 0% 98%;
-	--color-muted: 36 25% 94%;
-	--color-muted-foreground: 25 5.3% 44.7%;
-	--color-accent: 271 81% 96%;
-	--color-accent-foreground: 271 81% 56%;
+	--color-border: 0 0% 93%;
+	--color-input: 0 0% 96%;
+	--color-ring: 68 61% 34%;
+	--color-background: 0 0% 98%;
+	--color-foreground: 0 0% 13%;
+	--color-primary: 68 61% 34%;
+	--color-primary-foreground: 0 0% 100%;
+	--color-secondary: 68 15% 95%;
+	--color-secondary-foreground: 0 0% 13%;
+	--color-destructive: 0 84% 60%;
+	--color-destructive-foreground: 0 0% 100%;
+	--color-muted: 0 0% 96%;
+	--color-muted-foreground: 0 0% 45%;
+	--color-accent: 68 30% 95%;
+	--color-accent-foreground: 68 61% 34%;
 	--color-popover: 0 0% 100%;
-	--color-popover-foreground: 20 14.3% 4.1%;
+	--color-popover-foreground: 0 0% 13%;
 	--color-card: 0 0% 100%;
-	--color-card-foreground: 20 14.3% 4.1%;
+	--color-card-foreground: 0 0% 13%;
 
 	--radius: 0.5rem;
 }
@@ -77,51 +77,51 @@ body:has([data-radix-dropdown-menu-content]) {
 
 @layer base {
 	:root {
-		--background: 36 25% 96%;
-		--foreground: 20 14.3% 4.1%;
+		--background: 0 0% 98%;
+		--foreground: 0 0% 13%;
 
 		--card: 0 0% 100%;
-		--card-foreground: 20 14.3% 4.1%;
+		--card-foreground: 0 0% 13%;
 
 		--popover: 0 0% 100%;
-		--popover-foreground: 20 14.3% 4.1%;
+		--popover-foreground: 0 0% 13%;
 
-		--primary: 271 81% 56%;
-		--primary-foreground: 0 0% 98%;
-		--primary-hover: 271 81% 46%;
+		--primary: 68 61% 34%;
+		--primary-foreground: 0 0% 100%;
+		--primary-hover: 68 61% 28%;
 
-		--secondary: 36 25% 94%;
-		--secondary-foreground: 20 14.3% 4.1%;
+		--secondary: 68 15% 95%;
+		--secondary-foreground: 0 0% 13%;
 
-		--muted: 36 25% 94%;
-		--muted-foreground: 25 5.3% 44.7%;
+		--muted: 0 0% 96%;
+		--muted-foreground: 0 0% 45%;
 
-		--accent: 271 81% 96%;
-		--accent-foreground: 271 81% 56%;
+		--accent: 68 30% 95%;
+		--accent-foreground: 68 61% 34%;
 
-		--destructive: 0 84.2% 60.2%;
-		--destructive-foreground: 0 0% 98%;
+		--destructive: 0 84% 60%;
+		--destructive-foreground: 0 0% 100%;
 
-		--border: 36 25% 88%;
-		--input: 36 25% 88%;
-		--ring: 271 81% 56%;
+		--border: 0 0% 93%;
+		--input: 0 0% 96%;
+		--ring: 68 61% 34%;
 
 		--radius: 0.5rem;
 
 		/* Wedding theme colors */
 		--cream: 36 25% 96%;
-		--lavender: 271 81% 96%;
-		--sage: 120 9% 83%;
+		--lavender: 68 30% 95%;
+		--sage: 68 20% 88%;
 		--rose-gold: 14 100% 85%;
 
 		/* Gradients */
-		--gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(271 81% 66%));
-		--gradient-hero: linear-gradient(180deg, hsl(var(--cream)) 0%, hsl(36 25% 98%) 100%);
-		--gradient-card: linear-gradient(145deg, hsl(0 0% 100% / 0.8), hsl(36 25% 99% / 0.6));
+		--gradient-primary: linear-gradient(135deg, hsl(68 61% 34%), hsl(68 61% 44%));
+		--gradient-hero: linear-gradient(180deg, hsl(0 0% 98%) 0%, hsl(0 0% 100%) 100%);
+		--gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(0 0% 99%));
 
-		/* Shadows */
-		--shadow-card: 0 4px 6px -1px hsl(271 81% 56% / 0.1), 0 2px 4px -2px hsl(271 81% 56% / 0.05);
-		--shadow-elevated: 0 10px 25px -5px hsl(271 81% 56% / 0.15), 0 8px 10px -6px hsl(271 81% 56% / 0.05);
+		/* Shadows - softer for cleaner look */
+		--shadow-card: 0 1px 3px 0 hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+		--shadow-elevated: 0 4px 6px -1px hsl(0 0% 0% / 0.1), 0 2px 4px -2px hsl(0 0% 0% / 0.1);
 
 		--chart-1: 12 76% 61%;
 		--chart-2: 173 58% 39%;
@@ -140,9 +140,9 @@ body:has([data-radix-dropdown-menu-content]) {
 		--popover: 20 14.3% 6%;
 		--popover-foreground: 36 25% 96%;
 
-		--primary: 271 81% 66%;
-		--primary-foreground: 20 14.3% 4.1%;
-		--primary-hover: 271 81% 76%;
+		--primary: 68 61% 44%;
+		--primary-foreground: 0 0% 98%;
+		--primary-hover: 68 61% 54%;
 
 		--secondary: 20 14.3% 12%;
 		--secondary-foreground: 36 25% 96%;
@@ -150,15 +150,15 @@ body:has([data-radix-dropdown-menu-content]) {
 		--muted: 20 14.3% 12%;
 		--muted-foreground: 25 5.3% 65%;
 
-		--accent: 271 81% 16%;
-		--accent-foreground: 271 81% 86%;
+		--accent: 68 61% 24%;
+		--accent-foreground: 68 61% 84%;
 
 		--destructive: 0 62.8% 50%;
 		--destructive-foreground: 0 0% 98%;
 
 		--border: 20 14.3% 18%;
 		--input: 20 14.3% 18%;
-		--ring: 271 81% 66%;
+		--ring: 68 61% 44%;
 
 		/* Dark mode gradients */
 		--gradient-hero: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(20 14.3% 6%) 100%);
@@ -171,20 +171,16 @@ body:has([data-radix-dropdown-menu-content]) {
 
 		--sidebar-background: 20 14.3% 4.1%;
 		--sidebar-foreground: 36 25% 96%;
-		--sidebar-primary: 271 81% 66%;
-		--sidebar-primary-foreground: 20 14.3% 4.1%;
-		--sidebar-accent: 271 81% 16%;
-		--sidebar-accent-foreground: 271 81% 86%;
+		--sidebar-primary: 68 61% 44%;
+		--sidebar-primary-foreground: 0 0% 98%;
+		--sidebar-accent: 68 61% 24%;
+		--sidebar-accent-foreground: 68 61% 84%;
 		--sidebar-border: 20 14.3% 18%;
-		--sidebar-ring: 271 81% 66%;
+		--sidebar-ring: 68 61% 44%;
 	}
 }
 
 @layer base {
-	* {
-		@apply border-border;
-	}
-
 	body {
 		@apply bg-background text-foreground antialiased;
 		font-family: "Inter", var(--font-inter), sans-serif;
@@ -272,4 +268,49 @@ select:focus {
 
 .animate-scroll {
 	animation: scroll 40s linear infinite;
+}
+
+/* Enhanced Input Styling */
+@layer components {
+	input[type="text"],
+	input[type="email"],
+	input[type="password"],
+	input[type="date"],
+	input[type="time"],
+	input[type="number"],
+	textarea,
+	select {
+		@apply bg-white border-gray-200 rounded-lg transition-all duration-200;
+	}
+
+	input[type="text"]:focus,
+	input[type="email"]:focus,
+	input[type="password"]:focus,
+	input[type="date"]:focus,
+	input[type="time"]:focus,
+	input[type="number"]:focus,
+	textarea:focus,
+	select:focus {
+		@apply border-primary/50 ring-2 ring-primary/20 bg-white;
+	}
+
+	/* Card enhancements */
+	[class*="bg-card"] {
+		@apply shadow-sm;
+	}
+
+	/* Tab styling */
+	[role="tablist"] button {
+		@apply transition-all duration-200;
+	}
+
+	[role="tablist"] button[data-state="active"] {
+		@apply shadow-md;
+		background-color: hsl(68 61% 34%) !important;
+		color: white !important;
+	}
+
+	[role="tablist"] button[data-state="inactive"] {
+		@apply bg-gray-100 text-gray-600 hover:bg-gray-200;
+	}
 }

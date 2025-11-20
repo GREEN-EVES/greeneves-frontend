@@ -32,6 +32,7 @@ interface TemplateActions {
   verifyPayment: (reference: string) => Promise<boolean>;
   hasUserPurchasedTemplate: (templateId: string) => boolean;
   setCurrentTemplate: (template: DesignTemplate | null) => void;
+  toggleFavorite: (templateId: string) => Promise<void>;
 }
 
 type TemplateStore = TemplateState & TemplateActions;
@@ -240,4 +241,19 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
   },
 
   setCurrentTemplate: (template) => set({ currentTemplate: template }),
+
+  toggleFavorite: async (templateId) => {
+    // Toggle favorite status locally
+    set((state) => ({
+      templates: state.templates.map((template) =>
+        template.id === templateId
+          ? { ...template, isFavorited: !template.isFavorited }
+          : template
+      ),
+    }));
+
+    // TODO: Implement backend API call to persist favorite status
+    // For now, this is just a client-side toggle
+    console.log('Toggled favorite for template:', templateId);
+  },
 }));

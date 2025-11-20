@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth";
 import { useEventStore } from "@/stores/event";
 import { useTemplateStore } from "@/stores/template";
-import { useUIStore } from "@/stores/ui";
 import Header from "@/components/Header";
 import { Calendar, Heart, Users, Settings, FileText, Camera, Gift, MapPin, Globe, Copy } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,10 +20,9 @@ export default function DashboardPage() {
 
 	const { progress, fetchProgress, fetchEvents, events, currentEventId } = useEventStore();
 	const { fetchUserSubscriptions } = useTemplateStore();
-	const showToast = useUIStore((state) => state.showToast);
 
 	// Derive currentEvent from events array to ensure we get fresh data
-	const currentEvent = events.find(e => e.id === currentEventId) || null;
+	const currentEvent = events.find((e) => e.id === currentEventId) || null;
 
 	useEffect(() => {
 		// Wait for initialization to complete before making routing decisions
@@ -60,10 +58,7 @@ export default function DashboardPage() {
 	}
 
 	// Event-type aware text
-	const eventTypeText = currentEvent?.eventType === 'birthday' ? 'birthday' : 'wedding';
-	const eventName = currentEvent?.eventType === 'birthday'
-		? `${currentEvent?.celebrantName}'s Birthday`
-		: currentEvent?.eventName || 'your event';
+	const eventTypeText = currentEvent?.eventType === "birthday" ? "birthday" : "wedding";
 
 	const eventProgress = progress?.overallProgress || 0;
 	const daysUntilEvent = progress?.daysUntilWedding || 0;
@@ -113,7 +108,7 @@ export default function DashboardPage() {
 		<div className="min-h-screen bg-background">
 			<Header />
 
-			<div className="container mx-auto px-4 py-8">
+			<div className="container mx-auto px-4 py-8 pt-24">
 				{/* Header */}
 				<div className="mb-8">
 					<div className="flex items-center justify-between">
@@ -122,7 +117,9 @@ export default function DashboardPage() {
 								Welcome back, {user?.displayName || user?.email?.split("@")[0] || "there"}!
 							</h1>
 							<p className="text-muted-foreground mt-2">
-								{currentEvent ? `Let's continue planning your perfect ${eventTypeText}` : 'Create your first event to get started'}
+								{currentEvent
+									? `Let's continue planning your perfect ${eventTypeText}`
+									: "Create your first event to get started"}
 							</p>
 						</div>
 						{currentEvent && (
@@ -140,7 +137,7 @@ export default function DashboardPage() {
 						<CardHeader>
 							<CardTitle className="flex items-center gap-2">
 								<Heart className="h-5 w-5 text-pink-600" />
-								{eventTypeText === 'birthday' ? 'Birthday' : 'Wedding'} Planning Progress
+								{eventTypeText === "birthday" ? "Birthday" : "Wedding"} Planning Progress
 							</CardTitle>
 						</CardHeader>
 						<CardContent>
@@ -235,7 +232,7 @@ export default function DashboardPage() {
 					<CardHeader>
 						<CardTitle className="flex items-center gap-2">
 							<Globe className="h-5 w-5 text-primary" />
-							{eventTypeText === 'birthday' ? 'Birthday' : 'Wedding'} Website
+							{eventTypeText === "birthday" ? "Birthday" : "Wedding"} Website
 						</CardTitle>
 						<CardDescription>
 							{currentEvent
@@ -246,9 +243,12 @@ export default function DashboardPage() {
 					<CardContent>
 						{currentEvent ? (
 							<>
-								<div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border mb-4">
+								<div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border-2 border-gray-200 mb-4">
 									<div className="flex-1">
-										<p className="font-medium text-sm">Your {eventTypeText === 'birthday' ? 'Birthday' : 'Wedding'} Website:</p>
+										<p className="font-medium text-sm">
+											Your {eventTypeText === "birthday" ? "Birthday" : "Wedding"}{" "}
+											Website:
+										</p>
 										<p className="text-xs text-muted-foreground font-mono mt-1">
 											{typeof window !== "undefined" && currentEvent?.publicSlug
 												? `${window.location.origin}/events/${currentEvent.publicSlug}`
@@ -262,7 +262,11 @@ export default function DashboardPage() {
 													size="sm"
 													variant="outline"
 													onClick={() => {
-														if (typeof window !== "undefined" && currentEvent?.publicSlug) {
+														if (
+															typeof window !==
+																"undefined" &&
+															currentEvent?.publicSlug
+														) {
 															navigator.clipboard.writeText(
 																`${window.location.origin}/events/${currentEvent.publicSlug}`
 															);
@@ -273,7 +277,13 @@ export default function DashboardPage() {
 												</Button>
 												<Button
 													size="sm"
-													onClick={() => currentEvent?.publicSlug && window.open(`/events/${currentEvent.publicSlug}`, "_blank")}>
+													onClick={() =>
+														currentEvent?.publicSlug &&
+														window.open(
+															`/events/${currentEvent.publicSlug}`,
+															"_blank"
+														)
+													}>
 													View Site
 												</Button>
 											</>
@@ -282,17 +292,15 @@ export default function DashboardPage() {
 								</div>
 								<div className="flex gap-3">
 									<Button
-										onClick={() => router.push('/templates')}
+										onClick={() => router.push("/designs")}
 										variant="outline"
-										className="flex-1"
-									>
+										className="flex-1">
 										<Settings className="h-4 w-4 mr-2" />
 										Change Template
 									</Button>
-									<Button 
-										onClick={() => router.push(`/website-builder?edit=true`)}
-										className="flex-1"
-									>
+									<Button
+										onClick={() => router.push(`/event-setup?edit=true`)}
+										className="flex-1">
 										<FileText className="h-4 w-4 mr-2" />
 										Edit Content
 									</Button>
@@ -303,13 +311,11 @@ export default function DashboardPage() {
 								<Globe className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
 								<h3 className="text-lg font-semibold mb-2">Create Your First Event</h3>
 								<p className="text-muted-foreground mb-6">
-									Choose a beautiful template and create your personalized event website in minutes
+									Choose a beautiful template and create your personalized event website in
+									minutes
 								</p>
 								<div className="flex gap-3 justify-center">
-									<Button
-										onClick={() => router.push('/templates')}
-										size="lg"
-									>
+									<Button onClick={() => router.push("/designs")} size="lg">
 										<Heart className="h-4 w-4 mr-2" />
 										Browse Templates
 									</Button>
@@ -322,7 +328,10 @@ export default function DashboardPage() {
 				{/* Event Planning Tools */}
 				<Card className="mt-6">
 					<CardHeader>
-						<CardTitle>{currentEvent ? (eventTypeText === 'birthday' ? 'Birthday' : 'Wedding') : 'Event'} Planning Tools</CardTitle>
+						<CardTitle>
+							{currentEvent ? (eventTypeText === "birthday" ? "Birthday" : "Wedding") : "Event"} Planning
+							Tools
+						</CardTitle>
 						<CardDescription>Access all your planning tools in one place</CardDescription>
 					</CardHeader>
 					<CardContent>
@@ -356,20 +365,23 @@ export default function DashboardPage() {
 									title: "Template Gallery",
 									desc: "Browse event website templates",
 									icon: Settings,
-									href: "/templates",
+									href: "/designs",
 								},
 							].map((tool, index) => (
-								<Card key={index} className="hover:shadow-md transition-all duration-200 cursor-pointer border hover:border-gray-300">
+								<Card
+									key={index}
+									className="hover:shadow-md transition-all duration-200 cursor-pointer border-2 border-gray-200 hover:border-gray-300">
 									<CardContent className="p-8 text-center">
 										<tool.icon className="h-12 w-12 text-gray-600 mx-auto mb-6" />
 										<h3 className="text-xl font-bold text-gray-900 mb-3">{tool.title}</h3>
-										<p className="text-gray-600 text-sm mb-6 leading-relaxed">{tool.desc}</p>
-										<Button 
-											variant="outline" 
-											size="sm" 
+										<p className="text-gray-600 text-sm mb-6 leading-relaxed">
+											{tool.desc}
+										</p>
+										<Button
+											variant="outline"
+											size="sm"
 											onClick={() => router.push(tool.href)}
-											className="border-gray-300 text-gray-700 hover:bg-gray-50"
-										>
+											className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold">
 											Open Tool
 										</Button>
 									</CardContent>

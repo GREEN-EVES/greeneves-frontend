@@ -39,3 +39,58 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# =============================================================================
+# Security & Credentials - DO NOT COMMIT
+# =============================================================================
+
+# Environment files (already covered by .env* above, but being explicit)
+.env.local
+.env.production
+.env.secrets
+secrets.env
+
+# API keys and tokens
+*-key.json
+service-account*.json
+gcp-*.json
+google-credentials.json
+api-keys.txt
+secrets.txt
+credentials.txt
+
+# SSH keys and certificates
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+id_rsa*
+id_ecdsa*
+
+# Vercel credentials (if downloaded)
+.vercel/*.json
+
+# Auth tokens
+vercel-token.txt
+github-token.txt
+
+# Backup files
+*.backup
+*.bak
+backup_*
+
+# Logs with sensitive data
+*_secret.log
+auth*.log
+
+# Temporary credential files
+temp_keys/
+.secrets/
+
+# macOS keychain
+*.keychain
+
+# Database exports (if any)
+*.sql
+*.dump
